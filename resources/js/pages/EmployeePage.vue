@@ -237,8 +237,15 @@ onMounted(async () => {
         </section>
 
         <section v-if="employee" class="space-y-3">
-            <h2 class="text-lg font-semibold">Ordres de mission</h2>
-            <p class="text-sm text-slate-600">OM dont l'employé est missionnaire ou validateur.</p>
+            <div class="flex flex-wrap items-end justify-between gap-2">
+                <div>
+                    <h2 class="text-lg font-semibold">Ordres de mission</h2>
+                    <p class="text-sm text-slate-600">OM dont l'employé est missionnaire ou validateur.</p>
+                </div>
+                <RouterLink :to="{ path: '/anomalies', query: { employee_id: employee.id, state: 'all' } }" class="text-sm text-sky-700 hover:underline">
+                    Anomalies qui le concernent
+                </RouterLink>
+            </div>
             <div class="card overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-200 text-sm">
                     <thead class="bg-slate-50 text-left text-slate-600">
@@ -263,7 +270,12 @@ onMounted(async () => {
                             <td class="px-4 py-2 whitespace-nowrap">{{ formatDateTime(order.departure_at) || '—' }}</td>
                             <td class="px-4 py-2">{{ order.destination_place?.name ?? '—' }}</td>
                             <td class="px-4 py-2">{{ roles(order) }}</td>
-                            <td class="px-4 py-2">{{ order.administrative_status_label }}</td>
+                            <td class="px-4 py-2">
+                                {{ order.administrative_status_label }}
+                                <span class="block text-xs text-slate-500">
+                                    {{ order.control_status_label }}<template v-if="order.open_anomalies_count"> · {{ order.open_anomalies_count }} à traiter</template>
+                                </span>
+                            </td>
                         </tr>
                     </tbody>
                 </table>

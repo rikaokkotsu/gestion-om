@@ -36,6 +36,8 @@ class MissionOrderSummaryResource extends JsonResource
             'administrative_status_label' => $this->administrative_status->label(),
             'control_status' => $this->control_status->value,
             'control_status_label' => $this->control_status->label(),
+            'changed_since_control' => $this->changedSinceControl(),
+            'open_anomalies_count' => $this->whenCounted('openAnomalies'),
         ];
     }
 }

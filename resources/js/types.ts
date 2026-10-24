@@ -82,6 +82,12 @@ export interface Referentials {
     control_statuses: Option<string>[];
     cost_natures: Option<CostNatureCode>[];
     travel_directions: Option<TravelDirectionCode>[];
+    anomaly_categories: Option<AnomalyCategoryCode>[];
+    anomaly_natures: Option<AnomalyNatureCode>[];
+    anomaly_priorities: Option<AnomalyPriorityCode>[];
+    anomaly_sources: Option<AnomalySourceCode>[];
+    anomaly_states: Option<AnomalyStateCode>[];
+    rules: { code: string; category: AnomalyCategoryCode; label: string }[];
 }
 
 export interface Option<T extends string> {
@@ -261,6 +267,9 @@ export interface MissionOrder {
     administrative_status_label: string;
     control_status: string;
     control_status_label: string;
+    last_controlled_at: string | null;
+    changed_since_control: boolean;
+    open_anomalies_count?: number;
     notes: string | null;
     costs: MissionOrderCost[];
     legs: TransportLeg[];
@@ -286,4 +295,90 @@ export interface MissionOrderSummary {
     administrative_status_label: string;
     control_status: string;
     control_status_label: string;
+    changed_since_control: boolean;
+    open_anomalies_count?: number;
+}
+
+export type AnomalyCategoryCode = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H';
+export type AnomalyNatureCode = 'ERROR' | 'INCONSISTENCY' | 'MISSING' | 'CHECK';
+export type AnomalyPriorityCode = 'HIGH' | 'MEDIUM' | 'LOW';
+export type AnomalySourceCode = 'AUTO' | 'MANUAL';
+export type AnomalyStateCode = 'PROPOSED' | 'CONFIRMED' | 'DISMISSED' | 'TRANSMITTED' | 'CLOSED';
+
+export interface AnomalyEvent {
+    id: number;
+    type: 'CREATED' | 'STATE_CHANGED' | 'COMMENTED' | 'UPDATED' | 'REDETECTED' | 'NO_LONGER_DETECTED';
+    type_label: string;
+    user: { id: number; name: string } | null;
+    from_state: AnomalyStateCode | null;
+    from_state_label: string | null;
+    to_state: AnomalyStateCode | null;
+    to_state_label: string | null;
+    comment: string | null;
+    changes: Record<string, { old: string | number | null; new: string | number | null }> | null;
+    created_at: string;
+}
+
+export interface Anomaly {
+    id: number;
+    mission_order_id: number;
+    mission_order: { id: number; reference: string | null; type_label: string | null; departure_at: string | null; deleted: boolean };
+    member_id: number | null;
+    employee: EmployeeSummary | null;
+    category: AnomalyCategoryCode;
+    category_label: string;
+    rule_code: string | null;
+    rule_label: string | null;
+    source: AnomalySourceCode;
+    source_label: string;
+    nature: AnomalyNatureCode | null;
+    nature_label: string | null;
+    priority: AnomalyPriorityCode;
+    priority_label: string;
+    state: AnomalyStateCode;
+    state_label: string;
+    transitions: Option<AnomalyStateCode>[];
+    editable_fields: ('category' | 'priority' | 'description' | 'member_id')[];
+    description: string;
+    reported_by: { id: number; name: string } | null;
+    control_run_id: number | null;
+    detected_at: string;
+    last_detected_at: string | null;
+    no_longer_detected_at: string | null;
+    confirmed_at: string | null;
+    updated_at: string | null;
+    events?: AnomalyEvent[];
+}
+
+export interface ControlRule {
+    code: string;
+    category: AnomalyCategoryCode;
+    category_label: string;
+    nature: AnomalyNatureCode;
+    nature_label: string;
+    priority: AnomalyPriorityCode;
+    priority_label: string;
+    label: string;
+    explanation: string;
+    is_enabled: boolean;
+    open_anomalies_count: number;
+}
+
+export interface ControlRun {
+    id: number;
+    trigger: 'REQUEST' | 'BATCH';
+    trigger_label: string;
+    status: 'QUEUED' | 'RUNNING' | 'DONE' | 'FAILED';
+    status_label: string;
+    mission_order: { id: number; reference: string | null } | null;
+    filters: Record<string, string> | null;
+    launched_by: { id: number; name: string } | null;
+    orders_count: number;
+    processed_count: number;
+    anomalies_created: number;
+    anomalies_closed: number;
+    error: string | null;
+    started_at: string | null;
+    finished_at: string | null;
+    created_at: string | null;
 }

@@ -26,6 +26,16 @@ export function formatDateTime(value: string | null | undefined): string {
     return match ? `${match[3]}/${match[2]}/${match[1]} à ${match[4]}:${match[5]}` : '';
 }
 
+/** Horodatage du serveur (ISO 8601), en heure locale : « 03/11/2026 à 08:00 ». */
+export function formatTimestamp(value: string | null | undefined): string {
+    if (!value) {
+        return '';
+    }
+    const date = new Date(value);
+    const time = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return `${date.toLocaleDateString('fr-FR')} à ${time}`;
+}
+
 /**
  * Lecture d'un nombre entier saisi (espaces tolérés) : vide → null. Une saisie
  * illisible est renvoyée telle quelle pour que le serveur la refuse avec un message.

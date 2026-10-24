@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\AnomalyController;
 use App\Http\Controllers\Api\AuditLogController;
+use App\Http\Controllers\Api\ControlController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\MeController;
@@ -38,6 +40,21 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/mission-orders/{missionOrder}', [MissionOrderController::class, 'show']);
     Route::patch('/mission-orders/{missionOrder}', [MissionOrderController::class, 'update']);
     Route::delete('/mission-orders/{missionOrder}', [MissionOrderController::class, 'destroy']);
+    Route::post('/mission-orders/{missionOrder}/control', [ControlController::class, 'control']);
+    Route::get('/mission-orders/{missionOrder}/anomalies', [AnomalyController::class, 'forOrder']);
+
+    Route::get('/anomalies', [AnomalyController::class, 'index']);
+    Route::post('/anomalies', [AnomalyController::class, 'store']);
+    Route::get('/anomalies/{anomaly}', [AnomalyController::class, 'show']);
+    Route::patch('/anomalies/{anomaly}', [AnomalyController::class, 'update']);
+    Route::post('/anomalies/{anomaly}/transition', [AnomalyController::class, 'transition']);
+    Route::post('/anomalies/{anomaly}/comments', [AnomalyController::class, 'comment']);
+
+    Route::get('/control-rules', [ControlController::class, 'rules']);
+    Route::patch('/control-rules/{code}', [ControlController::class, 'updateRule']);
+    Route::get('/control-runs', [ControlController::class, 'runs']);
+    Route::post('/control-runs', [ControlController::class, 'storeRun']);
+    Route::get('/control-runs/{controlRun}', [ControlController::class, 'showRun']);
 
     Route::get('/imports/{type}/template', [ImportController::class, 'template']);
     Route::post('/imports/{type}', [ImportController::class, 'store']);

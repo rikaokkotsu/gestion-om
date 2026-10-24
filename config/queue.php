@@ -40,7 +40,8 @@ return [
             'connection' => env('DB_QUEUE_CONNECTION'),
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
-            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
+            // Au-delà de la durée maximale d'un contrôle par lot (une heure), pour qu'il ne soit pas relancé en double.
+            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 3660),
             'after_commit' => false,
         ],
 

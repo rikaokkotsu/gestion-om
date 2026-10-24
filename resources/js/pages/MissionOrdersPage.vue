@@ -15,6 +15,7 @@ const filters = reactive({
     search: String(route.query.search ?? ''),
     type: String(route.query.type ?? ''),
     administrative_status: String(route.query.administrative_status ?? ''),
+    control_status: String(route.query.control_status ?? ''),
 });
 const page = ref(Number(route.query.page ?? 1));
 const orders = ref<MissionOrderSummary[]>([]);
@@ -58,7 +59,7 @@ onMounted(async () => {
             <RouterLink to="/om/nouveau" class="btn-primary">Nouvel OM</RouterLink>
         </div>
 
-        <div class="card grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="card grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-5">
             <input v-model="filters.search" type="search" placeholder="Référence, matricule ou nom d'un missionnaire" class="field sm:col-span-2" />
             <select v-model="filters.type" class="field">
                 <option value="">Tous les types</option>
@@ -67,6 +68,10 @@ onMounted(async () => {
             <select v-model="filters.administrative_status" class="field">
                 <option value="">Tous les statuts</option>
                 <option v-for="s in referentials?.administrative_statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
+            </select>
+            <select v-model="filters.control_status" class="field" aria-label="Contrôle">
+                <option value="">Tous les contrôles</option>
+                <option v-for="s in referentials?.control_statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
             </select>
         </div>
 
@@ -101,7 +106,13 @@ onMounted(async () => {
                             {{ order.employees.map(employeeName).join(', ') || '—' }}
                         </td>
                         <td class="px-4 py-2">{{ order.administrative_status_label }}</td>
-                        <td class="px-4 py-2 text-slate-600">{{ order.control_status_label }}</td>
+                        <td class="px-4 py-2 text-slate-600">
+                            {{ order.control_status_label }}
+                            <span v-if="order.open_anomalies_count" class="ml-1 rounded bg-amber-100 px-1.5 text-xs font-medium text-amber-900">
+                                {{ order.open_anomalies_count }} à traiter
+                            </span>
+                            <span v-if="order.changed_since_control" class="block text-xs text-amber-700">modifié depuis le contrôle</span>
+                        </td>
                     </tr>
                 </tbody>
             </table>

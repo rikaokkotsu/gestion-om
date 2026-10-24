@@ -16,8 +16,10 @@ cp .env.example .env
 php artisan key:generate
 php artisan migrate
 php artisan om:premier-compte # crée le premier compte contrôleur
-composer run dev              # serveur Laravel + Vite sur http://localhost:8000
+composer run dev              # serveur Laravel, file d'attente et Vite sur http://localhost:8000
 ```
+
+Le contrôle par lot passe par la file d'attente (`QUEUE_CONNECTION=database`) : `composer run dev` lance un worker ; en production, faire tourner `php artisan queue:work` en permanence.
 
 Pour des données de démonstration : `php artisan migrate:fresh --seed` crée le compte `controleur@example.com` (mot de passe `motdepasse1`), deux comptes rattachés, quelques lieux et quatre employés.
 
@@ -66,7 +68,7 @@ Page « Import » : lieux d'abord, puis employés. Fichiers `.xlsx` ou `.csv` (v
 
 ## Saisie des OM
 
-- Un OM se saisit tel qu'il figure sur le document, même incomplet ou incohérent : seules les références (employés, lieux, moyens de transport…) doivent exister. Retour avant départ, quantité négative, validateur missionnaire ou indemnité sur une mission s'enregistrent ; le moteur de contrôle (étape 5) les signalera.
+- Un OM se saisit tel qu'il figure sur le document, même incomplet ou incohérent : seules les références (employés, lieux, moyens de transport…) doivent exister. Retour avant départ, quantité négative, validateur missionnaire ou indemnité sur une mission s'enregistrent ; le moteur de contrôle les signale.
 - La référence d'OM n'est pas unique en base : un doublon sur le document doit pouvoir être saisi, puis signalé.
 - Dates et heures locales (fuseau `Indian/Antananarivo`). La durée selon les dates est calculée à la lecture, à côté de la durée déclarée, selon `OM_DURATION_CONVENTION` : `inclusive_days` (par défaut, du 3 au 7 = 5 jours), `nights` ou `started_days`.
 - Chaque missionnaire a sa catégorie retenue sur l'OM (pré-remplie depuis sa fiche), ses quantités par type et par zone, ses totaux déclarés et son per diem déclaré. À chaque enregistrement, `App\Actions\SaveMissionOrder` calcule le per diem et le conserve à côté du déclaré, sans jamais l'écraser.
@@ -74,6 +76,15 @@ Page « Import » : lieux d'abord, puis employés. Fichiers `.xlsx` ou `.csv` (v
 - Pour un OM de type Affectation, la destination devient l'affectation de chaque missionnaire, avec la date de départ comme date d'effet et l'OM comme origine dans l'historique. Rien n'est défait si l'OM change ensuite de type ou est supprimé : l'historique garde la trace.
 - Les frais supplémentaires sont un montant global de l'OM, avec une ventilation facultative par nature. Les étapes de transport sont ordonnées dans chaque sens ; sans étape, l'OM n'a aucun moyen de transport.
 - Un OM supprimé l'est logiquement (`deleted_at`). Création, modification et suppression sont journalisées avec l'état complet de l'OM avant et après.
+
+## Contrôle et anomalies
+
+- Le contrôle automatique se lance à la demande, sur un OM (bouton « Lancer le contrôle » de sa fiche) ou sur un lot d'OM (période de départ, type, statut ; tous les OM, ou seulement ceux jamais contrôlés ou modifiés depuis). Il ne modifie jamais l'OM.
+- Les 30 règles du catalogue sont dans `app/Control/Rules`, une classe par règle, listées dans `App\Control\RuleRegistry` dans l'ordre des catégories A à H du § 13.2. Chaque règle a un code (EMP-01…FRA-02), une nature (erreur, incohérence, donnée manquante, à vérifier) qui donne la priorité par défaut, et se désactive depuis l'onglet « Règles de contrôle ».
+- Une anomalie automatique naît « proposée » ; le contrôleur la confirme ou l'écarte (motif obligatoire), puis la transmet et la clôture. Un signalement manuel naît « confirmé ». États : proposée → confirmée ou écartée ; confirmée → transmise, clôturée ou écartée ; transmise → clôturée ; écartée ou clôturée → confirmée (réouverture).
+- `App\Control\ControlEngine` évite les doublons : une situation est reconnue d'un contrôle à l'autre par sa règle, l'employé concerné et sa cible (étape, type de repas…). Une anomalie à traiter est conservée et sa description mise à jour ; une anomalie écartée ou clôturée n'est reproposée que si la situation a changé ou avait disparu entre-temps. Une anomalie proposée que le contrôle ne retrouve plus est clôturée ; une anomalie confirmée ou transmise est seulement marquée « plus détectée », le contrôleur décide.
+- Le statut de contrôle de l'OM en découle : « contrôle en cours » tant qu'une anomalie est proposée, « avec anomalies » dès qu'une anomalie a été confirmée (même transmise ou clôturée depuis), sinon « sans anomalie » s'il a été contrôlé.
+- Chaque anomalie garde son historique (création, changements d'état, commentaires, modifications, nouvelles détections) ; signalements, changements d'état, modifications, contrôles et réglages des règles sont aussi au journal d'audit.
 
 ## Organisation de l'API
 
@@ -85,5 +96,9 @@ Page « Import » : lieux d'abord, puis employés. Fichiers `.xlsx` ou `.csv` (v
 - `GET /api/imports/{places|employees}/template`, `POST /api/imports/{places|employees}` (`file`, `dry_run`)
 - `GET|POST /api/rate-versions`, `GET|PATCH|DELETE /api/rate-versions/{id}` (`PATCH` : `label`, `effective_from`, `rates[]` ; refusé avec 409 sur une version figée)
 - `POST /api/per-diem/simulate` (`category_id`, `date` ou `rate_version_id`, `quantities[]` : `consumption_type`, `zone_id`, `quantity`)
-- `GET /api/mission-orders?search=&type=&administrative_status=&employee_id=`, `POST /api/mission-orders`, `GET|PATCH|DELETE /api/mission-orders/{id}` ; `GET /api/employees/{id}/mission-orders` (OM dont l'employé est missionnaire ou validateur)
+- `GET /api/mission-orders?search=&type=&administrative_status=&control_status=&employee_id=`, `POST /api/mission-orders`, `GET|PATCH|DELETE /api/mission-orders/{id}` ; `GET /api/employees/{id}/mission-orders` (OM dont l'employé est missionnaire ou validateur)
+- `POST /api/mission-orders/{id}/control` (contrôle immédiat), `GET /api/mission-orders/{id}/anomalies`
+- `GET /api/anomalies?state=open|all|PROPOSED…&category=&priority=&source=&rule_code=&from=&to=&mission_order_id=&employee_id=&control_run_id=&search=`, `POST /api/anomalies` (signalement manuel), `GET|PATCH /api/anomalies/{id}`, `POST /api/anomalies/{id}/transition` (`state`, `comment`), `POST /api/anomalies/{id}/comments`
+- `GET /api/control-rules`, `PATCH /api/control-rules/{code}` (`is_enabled`)
+- `GET|POST /api/control-runs` (contrôle par lot : `scope` = `all` ou `pending`, `departure_from`, `departure_to`, `type`, `administrative_status`), `GET /api/control-runs/{id}`
 - `GET /api/audit-logs?action=user.&page=2`

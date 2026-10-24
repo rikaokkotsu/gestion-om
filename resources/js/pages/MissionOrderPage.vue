@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { errorsFrom, http } from '@/api';
+import MissionOrderAnomalies from '@/components/MissionOrderAnomalies.vue';
 import { employeeName, formatAmount, formatDate, formatDateTime } from '@/format';
 import { useReferentials } from '@/referentials';
 import type { ConsumptionTypeCode, MissionOrder, MissionOrderEmployee, TravelDirectionCode } from '@/types';
@@ -74,12 +75,13 @@ async function remove(): Promise<void> {
     }
 }
 
-onMounted(async () => {
-    const [, { data }] = await Promise.all([
-        loadReferentials(),
-        http.get<{ data: MissionOrder }>(`/api/mission-orders/${String(route.params.id)}`),
-    ]);
+async function loadOrder(): Promise<void> {
+    const { data } = await http.get<{ data: MissionOrder }>(`/api/mission-orders/${String(route.params.id)}`);
     order.value = data.data;
+}
+
+onMounted(async () => {
+    await Promise.all([loadReferentials(), loadOrder()]);
 });
 </script>
 
@@ -95,7 +97,9 @@ onMounted(async () => {
                 <div class="mt-2 flex flex-wrap gap-2 text-sm">
                     <span class="rounded bg-slate-100 px-2 py-0.5">{{ order.type_label ?? 'Type non renseigné' }}</span>
                     <span class="rounded bg-slate-100 px-2 py-0.5">{{ order.administrative_status_label }}</span>
-                    <span class="rounded bg-sky-50 px-2 py-0.5 text-sky-800">{{ order.control_status_label }}</span>
+                    <span class="rounded bg-sky-50 px-2 py-0.5 text-sky-800">
+                        {{ order.control_status_label }}<template v-if="order.open_anomalies_count"> · {{ order.open_anomalies_count }} à traiter</template>
+                    </span>
                 </div>
             </div>
             <div class="flex gap-2">
@@ -105,6 +109,8 @@ onMounted(async () => {
             </div>
         </div>
         <p v-if="message" class="text-sm text-red-700">{{ message }}</p>
+
+        <MissionOrderAnomalies :order="order" @changed="loadOrder" />
 
         <section class="card p-5">
             <h2 class="mb-4 text-lg font-semibold">Informations générales</h2>

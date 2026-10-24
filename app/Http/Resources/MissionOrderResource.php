@@ -61,6 +61,9 @@ class MissionOrderResource extends JsonResource
             'administrative_status_label' => $this->administrative_status->label(),
             'control_status' => $this->control_status->value,
             'control_status_label' => $this->control_status->label(),
+            'last_controlled_at' => $this->last_controlled_at?->toIso8601String(),
+            'changed_since_control' => $this->changedSinceControl(),
+            'open_anomalies_count' => $this->whenCounted('openAnomalies'),
             'notes' => $this->notes,
             'costs' => $this->costs->map(fn (MissionOrderCost $cost) => [
                 'nature' => $cost->nature->value,
