@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\AdministrativeStatus;
+use App\Enums\AnomalyState;
 use App\Enums\ControlStatus;
 use App\Enums\MissionOrderType;
 use App\Models\Contracts\DescribedInAudit;
@@ -35,6 +36,7 @@ use Illuminate\Support\Carbon;
  * @property AdministrativeStatus $administrative_status
  * @property ControlStatus $control_status
  * @property string|null $notes
+ * @property Carbon|null $last_controlled_at
  * @property int|null $created_by_id
  * @property int|null $updated_by_id
  * @property Carbon|null $created_at
@@ -75,6 +77,7 @@ class MissionOrder extends Model implements DescribedInAudit
             'assignment_allowance' => 'integer',
             'administrative_status' => AdministrativeStatus::class,
             'control_status' => ControlStatus::class,
+            'last_controlled_at' => 'datetime',
         ];
     }
 
@@ -148,6 +151,24 @@ class MissionOrder extends Model implements DescribedInAudit
     }
 
     /**
+     * @return HasMany<Anomaly, $this>
+     */
+    public function anomalies(): HasMany
+    {
+        return $this->hasMany(Anomaly::class);
+    }
+
+    /**
+     * Anomalies encore à traiter.
+     *
+     * @return HasMany<Anomaly, $this>
+     */
+    public function openAnomalies(): HasMany
+    {
+        return $this->hasMany(Anomaly::class)->whereIn('state', AnomalyState::openValues());
+    }
+
+    /**
      * @return BelongsTo<User, $this>
      */
     public function createdBy(): BelongsTo
@@ -183,6 +204,14 @@ class MissionOrder extends Model implements DescribedInAudit
         $query->where(fn (Builder $query) => $query
             ->where('validator_id', $employeeId)
             ->orWhereHas('employees', fn (Builder $member) => $member->where('employee_id', $employeeId)));
+    }
+
+    /**
+     * Modifié depuis le dernier contrôle : les anomalies affichées peuvent ne plus refléter l'OM.
+     */
+    public function changedSinceControl(): bool
+    {
+        return $this->last_controlled_at !== null && $this->updated_at !== null && $this->updated_at->greaterThan($this->last_controlled_at);
     }
 
     public function auditLabel(): string

@@ -80,6 +80,8 @@ class SaveMissionOrder
                 $changed = array_keys(array_filter($after, fn ($value, string $key) => ($before[$key] ?? null) !== $value, ARRAY_FILTER_USE_BOTH));
                 if ($changed !== []) {
                     Audit::record('mission_order.updated', $order, Arr::only($before, $changed), Arr::only($after, $changed), $actor);
+                    // Une modification des seules listes (missionnaires, étapes, frais) compte aussi comme une modification de l'OM.
+                    $order->touch();
                 }
             }
 

@@ -19,6 +19,12 @@ const actionLabels: Record<string, string> = {
     'rate_version.copied': 'Barème : tarifs copiés',
     'rate_version.deleted': 'Version de barème supprimée',
     'mission_order.deleted': 'OM supprimé',
+    'control.run': 'Contrôle d\'un OM',
+    'control.batch': 'Contrôle par lot lancé',
+    'control_rule.updated': 'Règle de contrôle modifiée',
+    'anomaly.created': 'Anomalie signalée',
+    'anomaly.updated': 'Anomalie modifiée',
+    'anomaly.state_changed': 'Anomalie : changement d\'état',
 };
 
 const subjectLabels: Record<string, string> = {
@@ -32,6 +38,9 @@ const subjectLabels: Record<string, string> = {
     rate_version: 'Version de barème',
     rate: 'Tarif',
     mission_order: 'OM',
+    anomaly: 'Anomalie',
+    control_run: 'Contrôle par lot',
+    control_rule: 'Règle',
 };
 
 const verbLabels: Record<string, string> = { created: 'création', updated: 'modification' };
@@ -47,6 +56,8 @@ function actionLabel(action: string): string {
 const filters = [
     { value: '', label: 'Toutes les actions' },
     { value: 'mission_order.', label: 'OM' },
+    { value: 'anomaly.', label: 'Anomalies' },
+    { value: 'control', label: 'Contrôles et règles' },
     { value: 'auth.', label: 'Connexions' },
     { value: 'user.', label: 'Comptes' },
     { value: 'employee.', label: 'Employés' },
@@ -103,6 +114,32 @@ const fieldLabels: Record<string, string> = {
     legs: 'étapes de transport',
     employees: 'missionnaires',
     current_place_id: 'affectation',
+    control_run_id: 'contrôle n°',
+    anomalies_created: 'anomalies proposées',
+    anomalies_closed: 'anomalies clôturées',
+    is_enabled: 'active',
+    mission_order_id: 'OM n°',
+    state: 'état',
+    comment: 'commentaire',
+    priority: 'priorité',
+    category: 'catégorie',
+    description: 'description',
+    employee_id: 'employé n°',
+    departure_from: 'départs à partir du',
+    departure_to: "départs jusqu'au",
+    type: 'type',
+    scope: 'OM à contrôler',
+};
+
+// Valeurs codées (états, priorités…) affichées par leur libellé.
+const scopeLabels: Record<string, string> = { all: 'tous', pending: 'jamais contrôlés ou modifiés depuis' };
+const optionFields: Record<string, () => { value: string; label: string }[]> = {
+    state: () => referentials.value?.anomaly_states ?? [],
+    priority: () => referentials.value?.anomaly_priorities ?? [],
+    category: () => referentials.value?.anomaly_categories ?? [],
+    administrative_status: () => referentials.value?.administrative_statuses ?? [],
+    type: () => referentials.value?.mission_order_types ?? [],
+    scope: () => Object.entries(scopeLabels).map(([value, label]) => ({ value, label })),
 };
 
 // Références vers les listes de référence, affichées par leur nom plutôt que par leur numéro.
@@ -118,6 +155,10 @@ const referenceFields: Record<string, () => { id: number; name?: string; label?:
 };
 
 function formatField(key: string, value: unknown): string {
+    const options = optionFields[key];
+    if (options && typeof value === 'string') {
+        return options().find((option) => option.value === value)?.label ?? value;
+    }
     const list = referenceFields[key];
     if (list && typeof value === 'number') {
         const item = list().find((entry) => entry.id === value);

@@ -2,7 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Control\RuleRegistry;
 use App\Enums\AdministrativeStatus;
+use App\Enums\AnomalyCategory;
+use App\Enums\AnomalyNature;
+use App\Enums\AnomalyPriority;
+use App\Enums\AnomalySource;
+use App\Enums\AnomalyState;
 use App\Enums\ConsumptionType;
 use App\Enums\ControlStatus;
 use App\Enums\CostNature;
@@ -25,7 +31,7 @@ class ReferentialController extends Controller
     /**
      * Toutes les listes en un appel, pour alimenter les formulaires.
      */
-    public function all(): JsonResponse
+    public function all(RuleRegistry $registry): JsonResponse
     {
         return response()->json(['data' => [
             'zones' => Zone::query()->orderBy('id')->get(['id', 'code', 'label']),
@@ -40,13 +46,23 @@ class ReferentialController extends Controller
             'control_statuses' => self::options(ControlStatus::cases()),
             'cost_natures' => self::options(CostNature::cases()),
             'travel_directions' => self::options(TravelDirection::cases()),
+            'anomaly_categories' => self::options(AnomalyCategory::cases()),
+            'anomaly_natures' => self::options(AnomalyNature::cases()),
+            'anomaly_priorities' => self::options(AnomalyPriority::cases()),
+            'anomaly_sources' => self::options(AnomalySource::cases()),
+            'anomaly_states' => self::options(AnomalyState::cases()),
+            'rules' => array_values(array_map(fn ($rule) => [
+                'code' => $rule->definition()->code,
+                'category' => $rule->definition()->category->value,
+                'label' => $rule->definition()->label,
+            ], $registry->all())),
         ]]);
     }
 
     /**
      * Valeurs d'une énumération, avec leur libellé, pour les listes de choix.
      *
-     * @param  list<ConsumptionType|MissionOrderType|AdministrativeStatus|ControlStatus|CostNature|TravelDirection>  $cases
+     * @param  list<ConsumptionType|MissionOrderType|AdministrativeStatus|ControlStatus|CostNature|TravelDirection|AnomalyCategory|AnomalyNature|AnomalyPriority|AnomalySource|AnomalyState>  $cases
      * @return list<array{value: string, label: string}>
      */
     private static function options(array $cases): array

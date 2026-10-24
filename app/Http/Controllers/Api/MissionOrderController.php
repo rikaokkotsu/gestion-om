@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\SaveMissionOrder;
 use App\Enums\AdministrativeStatus;
+use App\Enums\ControlStatus;
 use App\Enums\MissionOrderType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveMissionOrderRequest;
@@ -27,11 +28,13 @@ class MissionOrderController extends Controller
             'search' => ['nullable', 'string', 'max:255'],
             'type' => ['nullable', Rule::enum(MissionOrderType::class)],
             'administrative_status' => ['nullable', Rule::enum(AdministrativeStatus::class)],
+            'control_status' => ['nullable', Rule::enum(ControlStatus::class)],
             'employee_id' => ['nullable', 'integer'],
         ]);
 
         $orders = MissionOrder::query()
             ->with(MissionOrderSummaryResource::RELATIONS)
+            ->withCount('openAnomalies')
             ->when($filters['search'] ?? null, function (Builder $query, string $search) {
                 $like = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], trim($search)).'%';
                 $query->where(fn (Builder $query) => $query
@@ -40,6 +43,7 @@ class MissionOrderController extends Controller
             })
             ->when($filters['type'] ?? null, fn (Builder $query, string $type) => $query->where('type', $type))
             ->when($filters['administrative_status'] ?? null, fn (Builder $query, string $status) => $query->where('administrative_status', $status))
+            ->when($filters['control_status'] ?? null, fn (Builder $query, string $status) => $query->where('control_status', $status))
             ->when($filters['employee_id'] ?? null, fn (Builder $query, $id) => $query->concerning((int) $id))
             ->orderByRaw('departure_at desc nulls last')
             ->orderByDesc('id')
@@ -51,7 +55,7 @@ class MissionOrderController extends Controller
 
     public function show(MissionOrder $missionOrder): MissionOrderResource
     {
-        return new MissionOrderResource($missionOrder->load(MissionOrderResource::RELATIONS));
+        return new MissionOrderResource($missionOrder->load(MissionOrderResource::RELATIONS)->loadCount('openAnomalies'));
     }
 
     public function store(SaveMissionOrderRequest $request, SaveMissionOrder $save): JsonResponse
@@ -87,6 +91,7 @@ class MissionOrderController extends Controller
     {
         $orders = MissionOrder::query()
             ->with(MissionOrderSummaryResource::RELATIONS)
+            ->withCount('openAnomalies')
             ->concerning($employee->id)
             ->orderByRaw('departure_at desc nulls last')
             ->orderByDesc('id')

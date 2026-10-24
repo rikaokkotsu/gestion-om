@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use App\Control\RuleRegistry;
+use App\Models\Anomaly;
 use App\Models\AssignmentHistory;
 use App\Models\Category;
+use App\Models\ControlRuleSetting;
+use App\Models\ControlRun;
 use App\Models\Employee;
 use App\Models\MissionObject;
 use App\Models\MissionOrder;
@@ -29,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(RuleRegistry::class);
     }
 
     /**
@@ -52,6 +56,9 @@ class AppServiceProvider extends ServiceProvider
             'rate_version' => RateVersion::class,
             'rate' => Rate::class,
             'mission_order' => MissionOrder::class,
+            'anomaly' => Anomaly::class,
+            'control_run' => ControlRun::class,
+            'control_rule' => ControlRuleSetting::class,
         ]);
 
         Password::defaults(fn () => Password::min(10)->letters()->numbers());

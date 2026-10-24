@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Employé du référentiel : personne concernée par les OM, jamais utilisateur
@@ -73,6 +74,16 @@ class Employee extends Model implements DescribedInAudit
     public function assignmentHistories(): HasMany
     {
         return $this->hasMany(AssignmentHistory::class);
+    }
+
+    /**
+     * Dernière ligne de l'historique d'affectation.
+     *
+     * @return HasOne<AssignmentHistory, $this>
+     */
+    public function latestAssignment(): HasOne
+    {
+        return $this->hasOne(AssignmentHistory::class)->latestOfMany();
     }
 
     /**
