@@ -6,6 +6,11 @@ export const router = createRouter({
     routes: [
         { path: '/connexion', name: 'login', component: () => import('@/pages/LoginPage.vue'), meta: { guest: true } },
         { path: '/', name: 'home', component: () => import('@/pages/HomePage.vue') },
+        { path: '/employes', name: 'employees', component: () => import('@/pages/EmployeesPage.vue') },
+        { path: '/employes/nouveau', name: 'employee-create', component: () => import('@/pages/EmployeePage.vue') },
+        { path: '/employes/:id(\\d+)', name: 'employee', component: () => import('@/pages/EmployeePage.vue') },
+        { path: '/referentiels', name: 'referentials', component: () => import('@/pages/ReferentialsPage.vue') },
+        { path: '/import', name: 'import', component: () => import('@/pages/ImportPage.vue') },
         { path: '/comptes', name: 'users', component: () => import('@/pages/UsersPage.vue') },
         { path: '/mon-compte', name: 'account', component: () => import('@/pages/AccountPage.vue') },
         { path: '/journal', name: 'audit', component: () => import('@/pages/AuditPage.vue') },

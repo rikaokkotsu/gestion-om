@@ -44,9 +44,24 @@ L'intégration continue (`.github/workflows/ci.yml`) lance les mêmes commandes 
 
 `App\Support\Audit::record()` est le point d'entrée unique du journal (`audit_logs`). Sont journalisés : connexions, échecs de connexion, déconnexions, création, modification, désactivation et réactivation des comptes, changements de mot de passe. Les mots de passe ne sont jamais recopiés dans le journal.
 
+## Référentiels et employés
+
+- Les valeurs du cahier des charges (zones Nord et Autres, catégories DG à 5B, objets de mission, moyens de transport et leur règle de frais) sont créées par les migrations.
+- Les référentiels et les fiches employés ne se suppriment pas : ils se désactivent.
+- Une fiche employé n'exige que le matricule (unique) et le nom ; une fiche incomplète s'enregistre et sera signalée par le moteur de contrôle.
+- Chaque changement d'affectation, y compris le premier, ajoute une ligne à `assignment_histories` (origine : saisie, import ou OM). La date d'une affectation initiale peut rester inconnue.
+- Créations et modifications sont journalisées automatiquement par le trait `App\Models\Concerns\Auditable`.
+
+## Import Excel
+
+Page « Import » : lieux d'abord, puis employés. Fichiers `.xlsx` ou `.csv` (virgules ou points-virgules), modèle téléchargeable. Une simulation montre le bilan sans rien enregistrer. Une ligne invalide est rejetée avec son motif sans bloquer les autres ; un matricule existant met la fiche à jour sans effacer les valeurs connues par des cellules vides.
+
 ## Organisation de l'API
 
 - `POST /auth/login`, `POST /auth/logout` : session Sanctum (cookie + jeton XSRF), 5 tentatives par minute.
 - `GET /api/me`, `PUT /api/me/password`
 - `GET|POST /api/users`, `PATCH /api/users/{id}`, `POST /api/users/{id}/deactivate`, `POST /api/users/{id}/reactivate`
+- `GET /api/referentials` (toutes les listes), `GET|POST /api/referentials/{type}`, `PATCH /api/referentials/{type}/{id}` avec `type` = `categories`, `places`, `services`, `mission-objects`, `transport-modes`
+- `GET /api/employees?search=&service_id=&category_id=&current_place_id=&is_validator=&status=`, `POST /api/employees`, `GET|PATCH /api/employees/{id}`
+- `GET /api/imports/{places|employees}/template`, `POST /api/imports/{places|employees}` (`file`, `dry_run`)
 - `GET /api/audit-logs?action=user.&page=2`

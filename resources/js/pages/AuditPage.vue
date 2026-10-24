@@ -12,16 +12,37 @@ const actionLabels: Record<string, string> = {
     'user.deactivated': 'Compte désactivé',
     'user.reactivated': 'Compte réactivé',
     'user.password_changed': 'Mot de passe changé',
+    'import.places': 'Import de lieux',
+    'import.employees': 'Import d\'employés',
 };
 
 const subjectLabels: Record<string, string> = {
     user: 'Compte',
+    employee: 'Employé',
+    place: 'Lieu',
+    category: 'Catégorie',
+    service: 'Service',
+    mission_object: 'Objet de mission',
+    transport_mode: 'Moyen de transport',
 };
+
+const verbLabels: Record<string, string> = { created: 'création', updated: 'modification' };
+
+function actionLabel(action: string): string {
+    if (actionLabels[action]) {
+        return actionLabels[action];
+    }
+    const [subject = '', verb = ''] = action.split('.');
+    return `${subjectLabels[subject] ?? subject} : ${verbLabels[verb] ?? verb}`;
+}
 
 const filters = [
     { value: '', label: 'Toutes les actions' },
     { value: 'auth.', label: 'Connexions' },
     { value: 'user.', label: 'Comptes' },
+    { value: 'employee.', label: 'Employés' },
+    { value: 'place.', label: 'Lieux' },
+    { value: 'import.', label: 'Imports' },
 ];
 
 const logs = ref<AuditLog[]>([]);
@@ -90,7 +111,7 @@ onMounted(load);
                     <tr v-for="log in logs" v-else :key="log.id">
                         <td class="px-4 py-2 whitespace-nowrap">{{ new Date(log.created_at).toLocaleString('fr-FR') }}</td>
                         <td class="px-4 py-2">{{ log.user?.name ?? '—' }}</td>
-                        <td class="px-4 py-2">{{ actionLabels[log.action] ?? log.action }}</td>
+                        <td class="px-4 py-2">{{ actionLabel(log.action) }}</td>
                         <td class="px-4 py-2 whitespace-nowrap text-slate-600">
                             {{ log.auditable_type ? `${subjectLabels[log.auditable_type] ?? log.auditable_type} n° ${log.auditable_id}` : '' }}
                         </td>
