@@ -8,6 +8,7 @@ const links = [
     { to: '/', label: 'Accueil' },
     { to: '/employes', label: 'Employés' },
     { to: '/referentiels', label: 'Référentiels' },
+    { to: '/baremes', label: 'Barèmes' },
     { to: '/import', label: 'Import' },
     { to: '/comptes', label: 'Comptes' },
     { to: '/journal', label: "Journal d'audit" },

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Models\Contracts\DescribedInAudit;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -26,7 +27,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool $is_active
  */
 #[Fillable(['matricule', 'last_name', 'first_name', 'position', 'service_id', 'category_id', 'current_place_id', 'account_number', 'is_validator', 'is_active'])]
-class Employee extends Model
+class Employee extends Model implements DescribedInAudit
 {
     use Auditable;
 
@@ -90,5 +91,10 @@ class Employee extends Model
                 ->orWhereRaw("concat_ws(' ', first_name, last_name) ilike ?", [$like])
                 ->orWhereRaw("concat_ws(' ', last_name, first_name) ilike ?", [$like]);
         });
+    }
+
+    public function auditLabel(): string
+    {
+        return trim("{$this->last_name} {$this->first_name}")." ({$this->matricule})";
     }
 }

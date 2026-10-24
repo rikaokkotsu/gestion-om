@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Models\Contracts\DescribedInAudit;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $is_active
  */
 #[Fillable(['name', 'zone_id', 'is_active'])]
-class Place extends Model
+class Place extends Model implements DescribedInAudit
 {
     use Auditable;
 
@@ -36,5 +37,10 @@ class Place extends Model
     public function zone(): BelongsTo
     {
         return $this->belongsTo(Zone::class);
+    }
+
+    public function auditLabel(): string
+    {
+        return $this->name;
     }
 }

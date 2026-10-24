@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ConsumptionType;
 use App\Enums\Referential;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
@@ -28,6 +29,7 @@ class ReferentialController extends Controller
             'services' => Service::query()->orderBy('name')->get(),
             'mission_objects' => MissionObject::query()->orderBy('label')->get(),
             'transport_modes' => TransportMode::query()->orderBy('label')->get(),
+            'consumption_types' => array_map(fn (ConsumptionType $type) => ['value' => $type->value, 'label' => $type->label()], ConsumptionType::cases()),
         ]]);
     }
 

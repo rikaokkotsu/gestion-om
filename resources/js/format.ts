@@ -12,3 +12,10 @@ export function formatDate(value: string | null | undefined): string {
 export function employeeName(employee: { last_name: string; first_name: string | null }): string {
     return [employee.last_name.toUpperCase(), employee.first_name].filter(Boolean).join(' ');
 }
+
+const amountFormat = new Intl.NumberFormat('fr-FR');
+
+/** Montant en ariary, sans décimales : « 503 000 ». */
+export function formatAmount(value: number | null | undefined): string {
+    return value === null || value === undefined ? '' : amountFormat.format(value);
+}

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { http } from '@/api';
+import { formatDate } from '@/format';
 import type { AuditLog, Paginated } from '@/types';
 
 const actionLabels: Record<string, string> = {
@@ -14,6 +15,8 @@ const actionLabels: Record<string, string> = {
     'user.password_changed': 'Mot de passe changé',
     'import.places': 'Import de lieux',
     'import.employees': 'Import d\'employés',
+    'rate_version.copied': 'Barème : tarifs copiés',
+    'rate_version.deleted': 'Version de barème supprimée',
 };
 
 const subjectLabels: Record<string, string> = {
@@ -24,6 +27,8 @@ const subjectLabels: Record<string, string> = {
     service: 'Service',
     mission_object: 'Objet de mission',
     transport_mode: 'Moyen de transport',
+    rate_version: 'Version de barème',
+    rate: 'Tarif',
 };
 
 const verbLabels: Record<string, string> = { created: 'création', updated: 'modification' };
@@ -43,6 +48,7 @@ const filters = [
     { value: 'employee.', label: 'Employés' },
     { value: 'place.', label: 'Lieux' },
     { value: 'import.', label: 'Imports' },
+    { value: 'rate', label: 'Barèmes' },
 ];
 
 const logs = ref<AuditLog[]>([]);
@@ -61,11 +67,49 @@ async function load(): Promise<void> {
     loading.value = false;
 }
 
+function subject(log: AuditLog): string {
+    if (!log.auditable_type) {
+        return '';
+    }
+    const type = subjectLabels[log.auditable_type] ?? log.auditable_type;
+    return log.subject_label ? `${type} : ${log.subject_label}` : `${type} n° ${log.auditable_id}`;
+}
+
+const fieldLabels: Record<string, string> = {
+    amount: 'montant',
+    is_applicable: 'applicable',
+    effective_from: "date d'effet",
+    source_version_id: 'version source',
+    rates: 'tarifs',
+    label: 'libellé',
+};
+
+function formatValue(value: unknown): string {
+    if (value === null) {
+        return 'vide';
+    }
+    if (typeof value === 'boolean') {
+        return value ? 'oui' : 'non';
+    }
+    // Une date sans heure est enregistrée avec minuit : on n'affiche que la date.
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}( 00:00:00)?$/.test(value)) {
+        return formatDate(value.slice(0, 10));
+    }
+    return JSON.stringify(value);
+}
+
 function details(log: AuditLog): string {
     const parts: string[] = [];
-    for (const [key, value] of Object.entries(log.new_values ?? {})) {
+    const values = { ...(log.old_values ?? {}), ...(log.new_values ?? {}) };
+    for (const key of Object.keys(values)) {
+        const label = fieldLabels[key] ?? key;
         const before = log.old_values?.[key];
-        parts.push(before === undefined ? `${key} : ${JSON.stringify(value)}` : `${key} : ${JSON.stringify(before)} → ${JSON.stringify(value)}`);
+        const after = log.new_values?.[key];
+        if (log.new_values && key in log.new_values) {
+            parts.push(before === undefined ? `${label} : ${formatValue(after)}` : `${label} : ${formatValue(before)} → ${formatValue(after)}`);
+        } else {
+            parts.push(`${label} : ${formatValue(before)}`);
+        }
     }
     return parts.join(' · ');
 }
@@ -112,9 +156,7 @@ onMounted(load);
                         <td class="px-4 py-2 whitespace-nowrap">{{ new Date(log.created_at).toLocaleString('fr-FR') }}</td>
                         <td class="px-4 py-2">{{ log.user?.name ?? '—' }}</td>
                         <td class="px-4 py-2">{{ actionLabel(log.action) }}</td>
-                        <td class="px-4 py-2 whitespace-nowrap text-slate-600">
-                            {{ log.auditable_type ? `${subjectLabels[log.auditable_type] ?? log.auditable_type} n° ${log.auditable_id}` : '' }}
-                        </td>
+                        <td class="px-4 py-2 text-slate-600">{{ subject(log) }}</td>
                         <td class="px-4 py-2 text-slate-600">{{ details(log) }}</td>
                     </tr>
                 </tbody>

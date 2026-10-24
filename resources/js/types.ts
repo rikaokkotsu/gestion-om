@@ -15,6 +15,7 @@ export interface AuditLog {
     user: { id: number; name: string } | null;
     auditable_type: string | null;
     auditable_id: number | null;
+    subject_label: string | null;
     old_values: Record<string, unknown> | null;
     new_values: Record<string, unknown> | null;
     ip_address: string | null;
@@ -75,6 +76,7 @@ export interface Referentials {
     services: Service[];
     mission_objects: MissionObject[];
     transport_modes: TransportMode[];
+    consumption_types: ConsumptionType[];
 }
 
 export interface AssignmentHistory {
@@ -116,4 +118,51 @@ export interface ImportReport {
     rejected: { line: number; errors: string[] }[];
     warnings: { line: number; message: string }[];
     missing_columns: string[];
+}
+
+export type ConsumptionTypeCode = 'PETIT_DEJ' | 'DEJEUNER' | 'DINER' | 'FORFAIT_REPAS' | 'NUITEE';
+
+export interface ConsumptionType {
+    value: ConsumptionTypeCode;
+    label: string;
+}
+
+/** Montant renseigné, montant vide (non renseigné) ou sans objet (`is_applicable` faux). */
+export interface Rate {
+    category_id: number;
+    zone_id: number;
+    consumption_type: ConsumptionTypeCode;
+    amount: number | null;
+    is_applicable: boolean;
+}
+
+export interface RateVersion {
+    id: number;
+    label: string;
+    effective_from: string | null;
+    effective_to: string | null;
+    is_locked: boolean;
+    locked_at: string | null;
+    missing_count?: number;
+    rates?: Rate[];
+}
+
+export interface PerDiemLine {
+    consumption_type: ConsumptionTypeCode;
+    consumption_label: string;
+    zone_id: number;
+    zone_code: string;
+    quantity: number;
+    rate: number | null;
+    amount: number | null;
+    status: 'ok' | 'missing_rate' | 'not_applicable' | 'invalid_quantity';
+}
+
+export interface PerDiemResult {
+    rate_version: { id: number; label: string; effective_from: string | null } | null;
+    lines: PerDiemLine[];
+    zone_totals: Record<string, number>;
+    total: number;
+    complete: boolean;
+    issues: string[];
 }

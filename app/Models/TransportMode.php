@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Models\Contracts\DescribedInAudit;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool $is_active
  */
 #[Fillable(['label', 'generates_costs', 'is_active'])]
-class TransportMode extends Model
+class TransportMode extends Model implements DescribedInAudit
 {
     use Auditable;
 
@@ -28,5 +29,10 @@ class TransportMode extends Model
     protected function casts(): array
     {
         return ['generates_costs' => 'boolean', 'is_active' => 'boolean'];
+    }
+
+    public function auditLabel(): string
+    {
+        return $this->label;
     }
 }

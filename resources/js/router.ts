@@ -10,6 +10,7 @@ export const router = createRouter({
         { path: '/employes/nouveau', name: 'employee-create', component: () => import('@/pages/EmployeePage.vue') },
         { path: '/employes/:id(\\d+)', name: 'employee', component: () => import('@/pages/EmployeePage.vue') },
         { path: '/referentiels', name: 'referentials', component: () => import('@/pages/ReferentialsPage.vue') },
+        { path: '/baremes', name: 'rates', component: () => import('@/pages/RatesPage.vue') },
         { path: '/import', name: 'import', component: () => import('@/pages/ImportPage.vue') },
         { path: '/comptes', name: 'users', component: () => import('@/pages/UsersPage.vue') },
         { path: '/mon-compte', name: 'account', component: () => import('@/pages/AccountPage.vue') },
