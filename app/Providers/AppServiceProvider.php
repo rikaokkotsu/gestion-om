@@ -2,7 +2,15 @@
 
 namespace App\Providers;
 
+use App\Models\AssignmentHistory;
+use App\Models\Category;
+use App\Models\Employee;
+use App\Models\MissionObject;
+use App\Models\Place;
+use App\Models\Service;
+use App\Models\TransportMode;
 use App\Models\User;
+use App\Models\Zone;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -30,6 +38,14 @@ class AppServiceProvider extends ServiceProvider
 
         Relation::enforceMorphMap([
             'user' => User::class,
+            'zone' => Zone::class,
+            'category' => Category::class,
+            'place' => Place::class,
+            'service' => Service::class,
+            'mission_object' => MissionObject::class,
+            'transport_mode' => TransportMode::class,
+            'employee' => Employee::class,
+            'assignment_history' => AssignmentHistory::class,
         ]);
 
         Password::defaults(fn () => Password::min(10)->letters()->numbers());

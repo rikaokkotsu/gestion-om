@@ -6,6 +6,9 @@ const router = useRouter();
 
 const links = [
     { to: '/', label: 'Accueil' },
+    { to: '/employes', label: 'Employés' },
+    { to: '/referentiels', label: 'Référentiels' },
+    { to: '/import', label: 'Import' },
     { to: '/comptes', label: 'Comptes' },
     { to: '/journal', label: "Journal d'audit" },
 ];
@@ -27,7 +30,7 @@ async function signOut(): Promise<void> {
                         :key="link.to"
                         :to="link.to"
                         class="rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
-                        exact-active-class="bg-slate-100 font-medium text-slate-900"
+                        active-class="bg-slate-100 font-medium text-slate-900"
                     >
                         {{ link.label }}
                     </RouterLink>

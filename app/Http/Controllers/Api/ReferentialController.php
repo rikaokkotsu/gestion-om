@@ -1,0 +1,60 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Enums\Referential;
+use App\Http\Controllers\Controller;
+use App\Models\Category;
+use App\Models\MissionObject;
+use App\Models\Place;
+use App\Models\Service;
+use App\Models\TransportMode;
+use App\Models\Zone;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
+class ReferentialController extends Controller
+{
+    /**
+     * Toutes les listes en un appel, pour alimenter les formulaires.
+     */
+    public function all(): JsonResponse
+    {
+        return response()->json(['data' => [
+            'zones' => Zone::query()->orderBy('id')->get(['id', 'code', 'label']),
+            'categories' => Category::query()->orderBy('id')->get(),
+            'places' => Place::query()->with('zone:id,code,label')->orderBy('name')->get(),
+            'services' => Service::query()->orderBy('name')->get(),
+            'mission_objects' => MissionObject::query()->orderBy('label')->get(),
+            'transport_modes' => TransportMode::query()->orderBy('label')->get(),
+        ]]);
+    }
+
+    public function index(Referential $referential): JsonResponse
+    {
+        $items = $referential->model()::query()
+            ->with($referential->relations())
+            ->orderBy($referential->orderColumn())
+            ->get();
+
+        return response()->json(['data' => $items]);
+    }
+
+    public function store(Request $request, Referential $referential): JsonResponse
+    {
+        $data = Validator::make($request->all(), $referential->rules(null))->validate();
+        $item = $referential->model()::create($data);
+
+        return response()->json(['data' => $item->load($referential->relations())], 201);
+    }
+
+    public function update(Request $request, Referential $referential, int $id): JsonResponse
+    {
+        $item = $referential->model()::query()->findOrFail($id);
+        $data = Validator::make($request->all(), $referential->rules($item))->validate();
+        $item->update($data);
+
+        return response()->json(['data' => $item->load($referential->relations())]);
+    }
+}
