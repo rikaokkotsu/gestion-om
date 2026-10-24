@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Models\Contracts\DescribedInAudit;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool $is_active
  */
 #[Fillable(['code', 'label', 'is_active'])]
-class Category extends Model
+class Category extends Model implements DescribedInAudit
 {
     use Auditable;
 
@@ -36,5 +37,10 @@ class Category extends Model
     public function employees(): HasMany
     {
         return $this->hasMany(Employee::class);
+    }
+
+    public function auditLabel(): string
+    {
+        return $this->label;
     }
 }

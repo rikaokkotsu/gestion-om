@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\MeController;
+use App\Http\Controllers\Api\PerDiemController;
+use App\Http\Controllers\Api\RateVersionController;
 use App\Http\Controllers\Api\ReferentialController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +32,13 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
     Route::get('/imports/{type}/template', [ImportController::class, 'template']);
     Route::post('/imports/{type}', [ImportController::class, 'store']);
+
+    Route::get('/rate-versions', [RateVersionController::class, 'index']);
+    Route::post('/rate-versions', [RateVersionController::class, 'store']);
+    Route::get('/rate-versions/{rateVersion}', [RateVersionController::class, 'show']);
+    Route::patch('/rate-versions/{rateVersion}', [RateVersionController::class, 'update']);
+    Route::delete('/rate-versions/{rateVersion}', [RateVersionController::class, 'destroy']);
+    Route::post('/per-diem/simulate', [PerDiemController::class, 'simulate']);
 
     Route::get('/audit-logs', [AuditLogController::class, 'index']);
 });

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Contracts\DescribedInAudit;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -23,7 +24,7 @@ use Laravel\Sanctum\HasApiTokens;
  */
 #[Fillable(['name', 'email', 'password', 'created_by_id', 'is_active', 'deactivated_at'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements DescribedInAudit
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
@@ -62,5 +63,10 @@ class User extends Authenticatable
     public function isManagedBy(User $user): bool
     {
         return $this->created_by_id === $user->id;
+    }
+
+    public function auditLabel(): string
+    {
+        return $this->name;
     }
 }
