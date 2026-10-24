@@ -1,16 +1,32 @@
 <?php
 
-// Messages des règles utilisées par l'application ; les autres retombent sur l'anglais.
+// Messages de validation en français pour les règles utilisées par l'application.
 return [
+    'array' => 'Le champ :attribute doit être une liste.',
+    'between' => [
+        'numeric' => 'Le champ :attribute doit être compris entre :min et :max.',
+    ],
+    'boolean' => 'Le champ :attribute doit être vrai ou faux.',
     'confirmed' => 'La confirmation du champ :attribute ne correspond pas.',
     'current_password' => 'Le mot de passe actuel est incorrect.',
+    'date' => 'Le champ :attribute doit être une date valide.',
+    'distinct' => 'Le champ :attribute est présent en double.',
     'email' => 'Le champ :attribute doit être une adresse e-mail valide.',
+    'enum' => 'La valeur du champ :attribute n\'est pas reconnue.',
+    'exists' => 'La valeur du champ :attribute n\'existe pas dans le référentiel.',
+    'extensions' => 'Le fichier doit avoir l\'une des extensions suivantes : :values.',
+    'file' => 'Le champ :attribute doit être un fichier.',
+    'in' => 'La valeur du champ :attribute n\'est pas reconnue.',
     'integer' => 'Le champ :attribute doit être un nombre entier.',
     'lowercase' => 'Le champ :attribute doit être en minuscules.',
     'max' => [
+        'array' => 'Le champ :attribute ne doit pas contenir plus de :max éléments.',
+        'file' => 'Le fichier ne doit pas dépasser :max kilo-octets.',
+        'numeric' => 'Le champ :attribute ne doit pas dépasser :max.',
         'string' => 'Le champ :attribute ne doit pas dépasser :max caractères.',
     ],
     'min' => [
+        'numeric' => 'Le champ :attribute doit être supérieur ou égal à :min.',
         'string' => 'Le champ :attribute doit contenir au moins :min caractères.',
     ],
     'password' => [
@@ -20,6 +36,8 @@ return [
         'symbols' => 'Le champ :attribute doit contenir au moins un symbole.',
         'uncompromised' => 'Ce :attribute figure dans une fuite de données. Choisissez-en un autre.',
     ],
+    'prohibited' => 'Le champ :attribute ne peut pas être modifié.',
+    'regex' => 'Le format du champ :attribute n\'est pas valide.',
     'required' => 'Le champ :attribute est obligatoire.',
     'string' => 'Le champ :attribute doit être une chaîne de caractères.',
     'unique' => 'Cette valeur de :attribute est déjà utilisée.',
@@ -29,5 +47,14 @@ return [
         'email' => 'adresse e-mail',
         'password' => 'mot de passe',
         'current_password' => 'mot de passe actuel',
+        'matricule' => 'matricule',
+        'last_name' => 'nom',
+        'first_name' => 'prénom',
+        'position' => 'poste',
+        'label' => 'libellé',
+        'code' => 'code',
+        'effective_from' => 'date d\'effet',
+        'assignment_date' => 'date d\'effet de l\'affectation',
+        'file' => 'fichier',
     ],
 ];

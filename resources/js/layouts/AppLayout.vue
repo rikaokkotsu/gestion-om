@@ -6,6 +6,7 @@ const router = useRouter();
 
 const links = [
     { to: '/', label: 'Accueil' },
+    { to: '/om', label: 'OM' },
     { to: '/employes', label: 'Employés' },
     { to: '/referentiels', label: 'Référentiels' },
     { to: '/baremes', label: 'Barèmes' },

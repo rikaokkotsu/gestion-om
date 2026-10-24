@@ -2,8 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\AdministrativeStatus;
 use App\Enums\ConsumptionType;
+use App\Enums\ControlStatus;
+use App\Enums\CostNature;
+use App\Enums\MissionOrderType;
 use App\Enums\Referential;
+use App\Enums\TravelDirection;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\MissionObject;
@@ -29,8 +34,24 @@ class ReferentialController extends Controller
             'services' => Service::query()->orderBy('name')->get(),
             'mission_objects' => MissionObject::query()->orderBy('label')->get(),
             'transport_modes' => TransportMode::query()->orderBy('label')->get(),
-            'consumption_types' => array_map(fn (ConsumptionType $type) => ['value' => $type->value, 'label' => $type->label()], ConsumptionType::cases()),
+            'consumption_types' => self::options(ConsumptionType::cases()),
+            'mission_order_types' => self::options(MissionOrderType::cases()),
+            'administrative_statuses' => self::options(AdministrativeStatus::cases()),
+            'control_statuses' => self::options(ControlStatus::cases()),
+            'cost_natures' => self::options(CostNature::cases()),
+            'travel_directions' => self::options(TravelDirection::cases()),
         ]]);
+    }
+
+    /**
+     * Valeurs d'une énumération, avec leur libellé, pour les listes de choix.
+     *
+     * @param  list<ConsumptionType|MissionOrderType|AdministrativeStatus|ControlStatus|CostNature|TravelDirection>  $cases
+     * @return list<array{value: string, label: string}>
+     */
+    private static function options(array $cases): array
+    {
+        return array_map(fn ($case) => ['value' => $case->value, 'label' => $case->label()], $cases);
     }
 
     public function index(Referential $referential): JsonResponse

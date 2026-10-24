@@ -3,9 +3,9 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { errorsFrom, http } from '@/api';
 import FieldError from '@/components/FieldError.vue';
-import { employeeName, formatDate } from '@/format';
+import { employeeName, formatDate, formatDateTime } from '@/format';
 import { useReferentials } from '@/referentials';
-import type { Employee, ValidationErrors } from '@/types';
+import type { Employee, MissionOrderSummary, ValidationErrors } from '@/types';
 
 const route = useRoute();
 const router = useRouter();
@@ -52,16 +52,35 @@ function fill(data: Employee): void {
     });
 }
 
+const orders = ref<MissionOrderSummary[]>([]);
+
+function roles(order: MissionOrderSummary): string {
+    const labels = [];
+    if (order.employees.some((member) => member.id === employee.value?.id)) {
+        labels.push('Missionnaire');
+    }
+    if (order.validator?.id === employee.value?.id) {
+        labels.push('Validateur');
+    }
+    return labels.join(', ');
+}
+
 async function load(): Promise<void> {
     errors.value = {};
     saved.value = false;
+    orders.value = [];
     if (isNew.value) {
         employee.value = null;
         Object.assign(form, emptyForm());
         return;
     }
-    const { data } = await http.get<{ data: Employee }>(`/api/employees/${String(route.params.id)}`);
+    const id = String(route.params.id);
+    const [{ data }, { data: missionOrders }] = await Promise.all([
+        http.get<{ data: Employee }>(`/api/employees/${id}`),
+        http.get<{ data: MissionOrderSummary[] }>(`/api/employees/${id}/mission-orders`),
+    ]);
     fill(data.data);
+    orders.value = missionOrders.data;
 }
 
 async function submit(): Promise<void> {
@@ -215,7 +234,40 @@ onMounted(async () => {
                     </tbody>
                 </table>
             </div>
-            <p class="text-sm text-slate-500">Les OM de l'employé apparaîtront ici à partir de l'étape 4.</p>
+        </section>
+
+        <section v-if="employee" class="space-y-3">
+            <h2 class="text-lg font-semibold">Ordres de mission</h2>
+            <p class="text-sm text-slate-600">OM dont l'employé est missionnaire ou validateur.</p>
+            <div class="card overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <thead class="bg-slate-50 text-left text-slate-600">
+                        <tr>
+                            <th class="px-4 py-2 font-medium">Référence</th>
+                            <th class="px-4 py-2 font-medium">Type</th>
+                            <th class="px-4 py-2 font-medium">Départ</th>
+                            <th class="px-4 py-2 font-medium">Destination</th>
+                            <th class="px-4 py-2 font-medium">Rôle</th>
+                            <th class="px-4 py-2 font-medium">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr v-if="orders.length === 0">
+                            <td colspan="6" class="px-4 py-6 text-center text-slate-500">Aucun OM enregistré pour cet employé.</td>
+                        </tr>
+                        <tr v-for="order in orders" :key="order.id">
+                            <td class="px-4 py-2 font-mono">
+                                <RouterLink :to="`/om/${order.id}`" class="text-sky-700 hover:underline">{{ order.reference ?? 'sans référence' }}</RouterLink>
+                            </td>
+                            <td class="px-4 py-2">{{ order.type_label ?? '—' }}</td>
+                            <td class="px-4 py-2 whitespace-nowrap">{{ formatDateTime(order.departure_at) || '—' }}</td>
+                            <td class="px-4 py-2">{{ order.destination_place?.name ?? '—' }}</td>
+                            <td class="px-4 py-2">{{ roles(order) }}</td>
+                            <td class="px-4 py-2">{{ order.administrative_status_label }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
     </div>
 </template>

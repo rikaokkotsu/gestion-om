@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\DB;
  * (y compris la première) ajoute une ligne à l'historique, pour que
  * l'affectation actuelle corresponde toujours à la dernière ligne
  * enregistrée. Sans date fournie, un changement prend effet aujourd'hui ;
- * une affectation initiale garde une date inconnue.
+ * une affectation initiale, ou issue d'un OM sans date de départ, garde
+ * une date inconnue.
  */
 class SaveEmployee
 {
@@ -26,8 +27,9 @@ class SaveEmployee
         AssignmentSource $source,
         ?User $recordedBy = null,
         ?Carbon $effectiveDate = null,
+        ?int $missionOrderId = null,
     ): Employee {
-        return DB::transaction(function () use ($employee, $data, $source, $recordedBy, $effectiveDate) {
+        return DB::transaction(function () use ($employee, $data, $source, $recordedBy, $effectiveDate, $missionOrderId) {
             $employee ??= new Employee(['is_active' => true, 'is_validator' => false]);
             $previousPlaceId = $employee->exists ? $employee->current_place_id : null;
 
@@ -37,8 +39,9 @@ class SaveEmployee
                 $employee->assignmentHistories()->create([
                     'previous_place_id' => $previousPlaceId,
                     'new_place_id' => $employee->current_place_id,
-                    'effective_date' => ($effectiveDate ?? ($previousPlaceId === null ? null : now()))?->toDateString(),
+                    'effective_date' => ($effectiveDate ?? ($previousPlaceId === null || $source === AssignmentSource::MissionOrder ? null : now()))?->toDateString(),
                     'source' => $source,
+                    'mission_order_id' => $missionOrderId,
                     'recorded_by_id' => $recordedBy?->id,
                 ]);
             }

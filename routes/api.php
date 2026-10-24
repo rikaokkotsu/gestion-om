@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\MeController;
+use App\Http\Controllers\Api\MissionOrderController;
 use App\Http\Controllers\Api\PerDiemController;
 use App\Http\Controllers\Api\RateVersionController;
 use App\Http\Controllers\Api\ReferentialController;
@@ -29,6 +30,14 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::post('/employees', [EmployeeController::class, 'store']);
     Route::get('/employees/{employee}', [EmployeeController::class, 'show']);
     Route::patch('/employees/{employee}', [EmployeeController::class, 'update']);
+
+    Route::get('/employees/{employee}/mission-orders', [MissionOrderController::class, 'forEmployee']);
+
+    Route::get('/mission-orders', [MissionOrderController::class, 'index']);
+    Route::post('/mission-orders', [MissionOrderController::class, 'store']);
+    Route::get('/mission-orders/{missionOrder}', [MissionOrderController::class, 'show']);
+    Route::patch('/mission-orders/{missionOrder}', [MissionOrderController::class, 'update']);
+    Route::delete('/mission-orders/{missionOrder}', [MissionOrderController::class, 'destroy']);
 
     Route::get('/imports/{type}/template', [ImportController::class, 'template']);
     Route::post('/imports/{type}', [ImportController::class, 'store']);

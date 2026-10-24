@@ -6,6 +6,10 @@ export const router = createRouter({
     routes: [
         { path: '/connexion', name: 'login', component: () => import('@/pages/LoginPage.vue'), meta: { guest: true } },
         { path: '/', name: 'home', component: () => import('@/pages/HomePage.vue') },
+        { path: '/om', name: 'mission-orders', component: () => import('@/pages/MissionOrdersPage.vue') },
+        { path: '/om/nouveau', name: 'mission-order-create', component: () => import('@/pages/MissionOrderFormPage.vue') },
+        { path: '/om/:id(\\d+)', name: 'mission-order', component: () => import('@/pages/MissionOrderPage.vue') },
+        { path: '/om/:id(\\d+)/modifier', name: 'mission-order-edit', component: () => import('@/pages/MissionOrderFormPage.vue') },
         { path: '/employes', name: 'employees', component: () => import('@/pages/EmployeesPage.vue') },
         { path: '/employes/nouveau', name: 'employee-create', component: () => import('@/pages/EmployeePage.vue') },
         { path: '/employes/:id(\\d+)', name: 'employee', component: () => import('@/pages/EmployeePage.vue') },
