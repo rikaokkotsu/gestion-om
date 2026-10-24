@@ -6,6 +6,7 @@ use App\Models\AssignmentHistory;
 use App\Models\Category;
 use App\Models\Employee;
 use App\Models\MissionObject;
+use App\Models\MissionOrder;
 use App\Models\Place;
 use App\Models\Rate;
 use App\Models\RateVersion;
@@ -50,6 +51,7 @@ class AppServiceProvider extends ServiceProvider
             'assignment_history' => AssignmentHistory::class,
             'rate_version' => RateVersion::class,
             'rate' => Rate::class,
+            'mission_order' => MissionOrder::class,
         ]);
 
         Password::defaults(fn () => Password::min(10)->letters()->numbers());

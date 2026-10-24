@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { http } from '@/api';
-import { formatDate } from '@/format';
+import { formatDate, formatDateTime } from '@/format';
+import { useReferentials } from '@/referentials';
 import type { AuditLog, Paginated } from '@/types';
 
 const actionLabels: Record<string, string> = {
@@ -17,6 +18,7 @@ const actionLabels: Record<string, string> = {
     'import.employees': 'Import d\'employés',
     'rate_version.copied': 'Barème : tarifs copiés',
     'rate_version.deleted': 'Version de barème supprimée',
+    'mission_order.deleted': 'OM supprimé',
 };
 
 const subjectLabels: Record<string, string> = {
@@ -29,6 +31,7 @@ const subjectLabels: Record<string, string> = {
     transport_mode: 'Moyen de transport',
     rate_version: 'Version de barème',
     rate: 'Tarif',
+    mission_order: 'OM',
 };
 
 const verbLabels: Record<string, string> = { created: 'création', updated: 'modification' };
@@ -43,6 +46,7 @@ function actionLabel(action: string): string {
 
 const filters = [
     { value: '', label: 'Toutes les actions' },
+    { value: 'mission_order.', label: 'OM' },
     { value: 'auth.', label: 'Connexions' },
     { value: 'user.', label: 'Comptes' },
     { value: 'employee.', label: 'Employés' },
@@ -82,7 +86,47 @@ const fieldLabels: Record<string, string> = {
     source_version_id: 'version source',
     rates: 'tarifs',
     label: 'libellé',
+    reference: 'référence',
+    departure_at: 'départ',
+    return_at: 'retour',
+    departure_place_id: 'lieu de départ',
+    destination_place_id: 'destination',
+    mission_object_id: 'objet',
+    declared_duration: 'durée déclarée',
+    additional_costs: 'frais supplémentaires',
+    assignment_allowance: "indemnité d'affectation",
+    validator_id: 'validateur',
+    validated_at: 'validé le',
+    administrative_status: 'statut',
+    notes: 'observations',
+    costs: 'ventilation des frais',
+    legs: 'étapes de transport',
+    employees: 'missionnaires',
+    current_place_id: 'affectation',
 };
+
+// Références vers les listes de référence, affichées par leur nom plutôt que par leur numéro.
+const { referentials, load: loadReferentials } = useReferentials();
+const referenceFields: Record<string, () => { id: number; name?: string; label?: string }[]> = {
+    current_place_id: () => referentials.value?.places ?? [],
+    departure_place_id: () => referentials.value?.places ?? [],
+    destination_place_id: () => referentials.value?.places ?? [],
+    zone_id: () => referentials.value?.zones ?? [],
+    category_id: () => referentials.value?.categories ?? [],
+    service_id: () => referentials.value?.services ?? [],
+    mission_object_id: () => referentials.value?.mission_objects ?? [],
+};
+
+function formatField(key: string, value: unknown): string {
+    const list = referenceFields[key];
+    if (list && typeof value === 'number') {
+        const item = list().find((entry) => entry.id === value);
+        if (item) {
+            return item.name ?? item.label ?? String(value);
+        }
+    }
+    return formatValue(value);
+}
 
 function formatValue(value: unknown): string {
     if (value === null) {
@@ -95,6 +139,13 @@ function formatValue(value: unknown): string {
     if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}( 00:00:00)?$/.test(value)) {
         return formatDate(value.slice(0, 10));
     }
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(value)) {
+        return formatDateTime(value.replace(' ', 'T'));
+    }
+    // Les listes (étapes, missionnaires…) sont résumées ; le détail reste dans le journal.
+    if (Array.isArray(value)) {
+        return `${value.length} élément${value.length > 1 ? 's' : ''}`;
+    }
     return JSON.stringify(value);
 }
 
@@ -106,9 +157,9 @@ function details(log: AuditLog): string {
         const before = log.old_values?.[key];
         const after = log.new_values?.[key];
         if (log.new_values && key in log.new_values) {
-            parts.push(before === undefined ? `${label} : ${formatValue(after)}` : `${label} : ${formatValue(before)} → ${formatValue(after)}`);
+            parts.push(before === undefined ? `${label} : ${formatField(key, after)}` : `${label} : ${formatField(key, before)} → ${formatField(key, after)}`);
         } else {
-            parts.push(`${label} : ${formatValue(before)}`);
+            parts.push(`${label} : ${formatField(key, before)}`);
         }
     }
     return parts.join(' · ');
@@ -119,7 +170,9 @@ watch(action, () => {
     void load();
 });
 watch(page, load);
-onMounted(load);
+onMounted(async () => {
+    await Promise.all([loadReferentials(), load()]);
+});
 </script>
 
 <template>

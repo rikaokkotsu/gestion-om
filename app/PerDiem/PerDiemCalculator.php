@@ -16,8 +16,9 @@ class PerDiemCalculator
 {
     /**
      * @param  iterable<Consumption>  $consumptions
+     * @param  string|null  $missingVersionReason  explication à donner quand aucune version n'est fournie
      */
-    public function calculate(?Category $category, iterable $consumptions, ?RateVersion $version): PerDiemResult
+    public function calculate(?Category $category, iterable $consumptions, ?RateVersion $version, ?string $missingVersionReason = null): PerDiemResult
     {
         $zones = Zone::query()->orderBy('id')->pluck('code', 'id');
         $zoneTotals = $zones->mapWithKeys(fn (string $code) => [$code => 0])->all();
@@ -27,7 +28,7 @@ class PerDiemCalculator
             $issues[] = 'Catégorie du missionnaire manquante : aucun tarif ne peut être retenu.';
         }
         if ($version === null) {
-            $issues[] = 'Aucune version de barème ne s\'applique à cette date.';
+            $issues[] = $missingVersionReason ?? 'Aucune version de barème ne s\'applique à cette date.';
         }
 
         $rates = $category === null || $version === null

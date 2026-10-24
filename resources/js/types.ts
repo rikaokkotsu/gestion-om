@@ -77,6 +77,16 @@ export interface Referentials {
     mission_objects: MissionObject[];
     transport_modes: TransportMode[];
     consumption_types: ConsumptionType[];
+    mission_order_types: Option<MissionOrderTypeCode>[];
+    administrative_statuses: Option<AdministrativeStatusCode>[];
+    control_statuses: Option<string>[];
+    cost_natures: Option<CostNatureCode>[];
+    travel_directions: Option<TravelDirectionCode>[];
+}
+
+export interface Option<T extends string> {
+    value: T;
+    label: string;
 }
 
 export interface AssignmentHistory {
@@ -165,4 +175,115 @@ export interface PerDiemResult {
     total: number;
     complete: boolean;
     issues: string[];
+}
+
+export type MissionOrderTypeCode = 'MISSION' | 'AFFECTATION';
+export type AdministrativeStatusCode = 'PENDING' | 'VALIDATED' | 'REJECTED' | 'CANCELLED';
+export type CostNatureCode = 'TRANSPORT' | 'HEALTH' | 'CONTINGENCY' | 'OTHER';
+export type TravelDirectionCode = 'OUTBOUND' | 'RETURN';
+
+export interface EmployeeSummary {
+    id: number;
+    matricule: string;
+    last_name: string;
+    first_name: string | null;
+    is_validator: boolean;
+    is_active: boolean;
+}
+
+export interface PlaceSummary {
+    id: number;
+    name: string;
+    zone?: { id: number; code: string; label: string } | null;
+}
+
+export interface MissionOrderCost {
+    nature: CostNatureCode;
+    nature_label: string;
+    label: string | null;
+    amount: number | null;
+}
+
+export interface TransportLeg {
+    direction: TravelDirectionCode;
+    position: number;
+    transport_mode_id: number | null;
+    transport_mode: { id: number; label: string; generates_costs: boolean } | null;
+    from_place_id: number | null;
+    from_place: PlaceSummary | null;
+    to_place_id: number | null;
+    to_place: PlaceSummary | null;
+    cost: number | null;
+}
+
+export interface MissionOrderEmployee {
+    id: number;
+    employee_id: number;
+    employee: EmployeeSummary & {
+        category: { id: number; code: string; label: string } | null;
+        current_place: PlaceSummary | null;
+    };
+    category_id: number | null;
+    category: { id: number; code: string; label: string } | null;
+    declared_per_diem: number | null;
+    calculated_per_diem: number | null;
+    calculation_complete: boolean | null;
+    calculation: PerDiemResult | null;
+    rate_version: { id: number; label: string } | null;
+    calculated_at: string | null;
+    quantities: { consumption_type: ConsumptionTypeCode; zone_id: number; quantity: number }[];
+    totals: { consumption_type: ConsumptionTypeCode; total: number }[];
+    assignment_changes: { previous_place: PlaceSummary | null; new_place: PlaceSummary | null; effective_date: string | null }[];
+}
+
+export interface MissionOrder {
+    id: number;
+    reference: string | null;
+    type: MissionOrderTypeCode | null;
+    type_label: string | null;
+    mission_object_id: number | null;
+    mission_object: { id: number; label: string } | null;
+    departure_at: string | null;
+    return_at: string | null;
+    departure_place_id: number | null;
+    departure_place: PlaceSummary | null;
+    destination_place_id: number | null;
+    destination_place: PlaceSummary | null;
+    declared_duration: number | null;
+    calculated_duration: number | null;
+    duration_convention: string;
+    additional_costs: number | null;
+    assignment_allowance: number | null;
+    validator_id: number | null;
+    validator: EmployeeSummary | null;
+    validated_at: string | null;
+    administrative_status: AdministrativeStatusCode;
+    administrative_status_label: string;
+    control_status: string;
+    control_status_label: string;
+    notes: string | null;
+    costs: MissionOrderCost[];
+    legs: TransportLeg[];
+    employees: MissionOrderEmployee[];
+    created_by: { id: number; name: string } | null;
+    updated_by: { id: number; name: string } | null;
+    created_at: string | null;
+    updated_at: string | null;
+}
+
+export interface MissionOrderSummary {
+    id: number;
+    reference: string | null;
+    type: MissionOrderTypeCode | null;
+    type_label: string | null;
+    mission_object: { id: number; label: string } | null;
+    departure_at: string | null;
+    return_at: string | null;
+    destination_place: { id: number; name: string } | null;
+    validator: EmployeeSummary | null;
+    employees: EmployeeSummary[];
+    administrative_status: AdministrativeStatusCode;
+    administrative_status_label: string;
+    control_status: string;
+    control_status_label: string;
 }
