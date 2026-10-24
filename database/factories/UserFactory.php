@@ -30,16 +30,30 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'created_by_id' => null,
+            'is_active' => true,
+            'deactivated_at' => null,
         ];
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Indicate that the account was created by another account.
      */
-    public function unverified(): static
+    public function createdBy(User $creator): static
     {
         return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+            'created_by_id' => $creator->id,
+        ]);
+    }
+
+    /**
+     * Indicate that the account is deactivated.
+     */
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_active' => false,
+            'deactivated_at' => now(),
         ]);
     }
 }
