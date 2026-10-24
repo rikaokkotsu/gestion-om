@@ -25,6 +25,10 @@ const actionLabels: Record<string, string> = {
     'anomaly.created': 'Anomalie signalée',
     'anomaly.updated': 'Anomalie modifiée',
     'anomaly.state_changed': 'Anomalie : changement d\'état',
+    'export.mission_orders': 'Export Excel des OM',
+    'export.anomalies': 'Export Excel des anomalies',
+    'report.mission_order': 'Rapport de contrôle d\'un OM',
+    'report.summary': 'Récapitulatif des OM',
 };
 
 const subjectLabels: Record<string, string> = {
@@ -63,6 +67,8 @@ const filters = [
     { value: 'employee.', label: 'Employés' },
     { value: 'place.', label: 'Lieux' },
     { value: 'import.', label: 'Imports' },
+    { value: 'export.', label: 'Exports' },
+    { value: 'report.', label: 'Rapports' },
     { value: 'rate', label: 'Barèmes' },
 ];
 
@@ -129,6 +135,9 @@ const fieldLabels: Record<string, string> = {
     departure_to: "départs jusqu'au",
     type: 'type',
     scope: 'OM à contrôler',
+    criteria: 'critères',
+    orders: 'OM',
+    anomalies: 'anomalies',
 };
 
 // Valeurs codées (états, priorités…) affichées par leur libellé.

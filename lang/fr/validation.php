@@ -2,6 +2,7 @@
 
 // Messages de validation en français pour les règles utilisées par l'application.
 return [
+    'after_or_equal' => 'Le champ :attribute doit être une date égale ou postérieure au :date.',
     'array' => 'Le champ :attribute doit être une liste.',
     'between' => [
         'numeric' => 'Le champ :attribute doit être compris entre :min et :max.',

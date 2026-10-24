@@ -143,6 +143,20 @@ class Anomaly extends Model implements DescribedInAudit
         $query->whereIn('state', AnomalyState::openValues());
     }
 
+    /**
+     * Anomalies que l'OM présente : à traiter, ou clôturées après avoir été
+     * confirmées. Les écartées et les propositions que le contrôle a closes
+     * sans confirmation n'en font pas partie.
+     *
+     * @param  Builder<Anomaly>  $query
+     */
+    public function scopeRetained(Builder $query): void
+    {
+        $query->where(fn (Builder $query) => $query
+            ->whereIn('state', AnomalyState::openValues())
+            ->orWhere(fn (Builder $query) => $query->where('state', AnomalyState::Closed)->whereNotNull('confirmed_at')));
+    }
+
     public function auditLabel(): string
     {
         return "n° {$this->id}".($this->rule_code !== null ? " ({$this->rule_code})" : '');

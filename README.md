@@ -86,6 +86,15 @@ Page « Import » : lieux d'abord, puis employés. Fichiers `.xlsx` ou `.csv` (v
 - Le statut de contrôle de l'OM en découle : « contrôle en cours » tant qu'une anomalie est proposée, « avec anomalies » dès qu'une anomalie a été confirmée (même transmise ou clôturée depuis), sinon « sans anomalie » s'il a été contrôlé.
 - Chaque anomalie garde son historique (création, changements d'état, commentaires, modifications, nouvelles détections) ; signalements, changements d'état, modifications, contrôles et réglages des règles sont aussi au journal d'audit.
 
+## Recherche, tableau de bord et rapports
+
+- Les critères de recherche des OM (§ 14.1) sont définis une seule fois, dans `App\Search\MissionOrderSearch`, et servent à la liste, au tableau de bord, à l'export Excel et au récapitulatif PDF : un même filtre retient partout les mêmes OM. Critères combinables : référence ou missionnaire, missionnaire (nom ou matricule), catégorie retenue sur l'OM, service du missionnaire, validateur, type, objet, destination, période de départ, période de retour, état de validation, état du contrôle, présence d'anomalies. Missionnaire, catégorie et service visent une même personne de l'OM.
+- Présence d'anomalies : « à traiter » (proposée, confirmée ou transmise) ; « à traiter ou traitées » (les mêmes, plus les anomalies clôturées après confirmation) ; « sans anomalie » (aucune des précédentes). Les anomalies écartées et les propositions closes par le contrôle sans confirmation ne comptent pas.
+- Le tableau de bord (page d'accueil, `App\Reports\Dashboard`) est calculé à chaque affichage sur les OM enregistrés, hors OM supprimés, pour une période de départ. Le total des per diem calculés ne retient que les calculs complets ; les calculs incomplets (tarif manquant, quantité invalide) sont dénombrés à part, jamais comptés pour 0.
+- Exports Excel : le classeur des OM (feuilles OM, Missionnaires, Frais, Transports, Anomalies, Critères) et la liste des anomalies, avec les filtres de l'écran. Montants déclarés et calculés y figurent côte à côte ; un texte qui commence par « = » reste un texte.
+- PDF : le rapport de contrôle d'un OM (fiche, per diem déclaré et calculé avec le détail du calcul, frais, transports, anomalies par état avec leur dernier commentaire) et le récapitulatif d'une sélection d'OM (indicateurs puis liste, limitée à 500 OM ; l'export Excel n'a pas de limite). Les PDF sont produits par dompdf, sans ressource distante.
+- Chaque export et chaque rapport est inscrit au journal d'audit avec ses critères et le nombre de lignes produites.
+
 ## Organisation de l'API
 
 - `POST /auth/login`, `POST /auth/logout` : session Sanctum (cookie + jeton XSRF), 5 tentatives par minute.
@@ -96,9 +105,11 @@ Page « Import » : lieux d'abord, puis employés. Fichiers `.xlsx` ou `.csv` (v
 - `GET /api/imports/{places|employees}/template`, `POST /api/imports/{places|employees}` (`file`, `dry_run`)
 - `GET|POST /api/rate-versions`, `GET|PATCH|DELETE /api/rate-versions/{id}` (`PATCH` : `label`, `effective_from`, `rates[]` ; refusé avec 409 sur une version figée)
 - `POST /api/per-diem/simulate` (`category_id`, `date` ou `rate_version_id`, `quantities[]` : `consumption_type`, `zone_id`, `quantity`)
-- `GET /api/mission-orders?search=&type=&administrative_status=&control_status=&employee_id=`, `POST /api/mission-orders`, `GET|PATCH|DELETE /api/mission-orders/{id}` ; `GET /api/employees/{id}/mission-orders` (OM dont l'employé est missionnaire ou validateur)
+- `GET /api/mission-orders?search=&missionary=&category_id=&service_id=&validator=&type=&mission_object_id=&destination_place_id=&departure_from=&departure_to=&return_from=&return_to=&administrative_status=&control_status=&anomalies=open|any|none&employee_id=`, `POST /api/mission-orders`, `GET|PATCH|DELETE /api/mission-orders/{id}` ; `GET /api/employees/{id}/mission-orders` (OM dont l'employé est missionnaire ou validateur)
 - `POST /api/mission-orders/{id}/control` (contrôle immédiat), `GET /api/mission-orders/{id}/anomalies`
 - `GET /api/anomalies?state=open|all|PROPOSED…&category=&priority=&source=&rule_code=&from=&to=&mission_order_id=&employee_id=&control_run_id=&search=`, `POST /api/anomalies` (signalement manuel), `GET|PATCH /api/anomalies/{id}`, `POST /api/anomalies/{id}/transition` (`state`, `comment`), `POST /api/anomalies/{id}/comments`
 - `GET /api/control-rules`, `PATCH /api/control-rules/{code}` (`is_enabled`)
+- `GET /api/dashboard` (mêmes critères que la liste des OM), `GET /api/reports/summary` (récapitulatif PDF, mêmes critères), `GET /api/reports/mission-orders/{id}` (rapport de contrôle PDF)
+- `GET /api/exports/mission-orders` (Excel, mêmes critères que la liste des OM), `GET /api/exports/anomalies` (Excel, mêmes critères que la liste des anomalies)
 - `GET|POST /api/control-runs` (contrôle par lot : `scope` = `all` ou `pending`, `departure_from`, `departure_to`, `type`, `administrative_status`), `GET /api/control-runs/{id}`
 - `GET /api/audit-logs?action=user.&page=2`

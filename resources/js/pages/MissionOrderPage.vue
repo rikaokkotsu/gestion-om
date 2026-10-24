@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { errorsFrom, http } from '@/api';
+import DownloadButton from '@/components/DownloadButton.vue';
 import MissionOrderAnomalies from '@/components/MissionOrderAnomalies.vue';
 import { employeeName, formatAmount, formatDate, formatDateTime } from '@/format';
 import { useReferentials } from '@/referentials';
@@ -102,7 +103,8 @@ onMounted(async () => {
                     </span>
                 </div>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap items-start gap-2">
+                <DownloadButton :url="`/api/reports/mission-orders/${order.id}`" label="Rapport de contrôle PDF" />
                 <RouterLink :to="`/om/${order.id}/modifier`" class="btn-primary">Modifier</RouterLink>
                 <button v-if="!confirmDelete" type="button" class="btn-danger" @click="confirmDelete = true">Supprimer</button>
                 <button v-else type="button" class="btn-danger" @click="remove">Confirmer la suppression</button>

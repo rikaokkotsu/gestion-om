@@ -17,11 +17,10 @@ use App\Http\Resources\AnomalyResource;
 use App\Models\Anomaly;
 use App\Models\MissionOrder;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Builder;
+use App\Search\AnomalySearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 
 class AnomalyController extends Controller
@@ -48,48 +47,10 @@ class AnomalyController extends Controller
     /**
      * Liste filtrable (§ 13.4) ; les anomalies des OM supprimés n'y figurent pas.
      */
-    public function index(Request $request, RuleRegistry $registry): AnonymousResourceCollection
+    public function index(Request $request, AnomalySearch $search): AnonymousResourceCollection
     {
-        $filters = $request->validate([
-            'state' => ['nullable', Rule::in(['open', 'all', ...array_column(AnomalyState::cases(), 'value')])],
-            'category' => ['nullable', Rule::enum(AnomalyCategory::class)],
-            'source' => ['nullable', Rule::enum(AnomalySource::class)],
-            'priority' => ['nullable', Rule::enum(AnomalyPriority::class)],
-            'rule_code' => ['nullable', Rule::in(array_keys($registry->all()))],
-            'from' => ['nullable', 'date'],
-            'to' => ['nullable', 'date', 'after_or_equal:from'],
-            'mission_order_id' => ['nullable', 'integer'],
-            'employee_id' => ['nullable', 'integer'],
-            'control_run_id' => ['nullable', 'integer'],
-            'search' => ['nullable', 'string', 'max:255'],
-        ], attributes: ['from' => 'date de début', 'to' => 'date de fin']);
-
-        $anomalies = Anomaly::query()
+        $anomalies = AnomalySearch::query($search->validate($request))
             ->with(AnomalyResource::RELATIONS)
-            ->onActiveOrders()
-            ->when($filters['state'] ?? null, fn (Builder $query, string $state) => match ($state) {
-                'open' => $query->open(),
-                'all' => $query,
-                default => $query->where('state', $state),
-            })
-            ->when($filters['category'] ?? null, fn (Builder $query, string $category) => $query->where('category', $category))
-            ->when($filters['source'] ?? null, fn (Builder $query, string $source) => $query->where('source', $source))
-            ->when($filters['priority'] ?? null, fn (Builder $query, string $priority) => $query->where('priority', $priority))
-            ->when($filters['rule_code'] ?? null, fn (Builder $query, string $code) => $query->where('rule_code', $code))
-            ->when($filters['from'] ?? null, fn (Builder $query, string $date) => $query->where('detected_at', '>=', Carbon::parse($date)->startOfDay()))
-            ->when($filters['to'] ?? null, fn (Builder $query, string $date) => $query->where('detected_at', '<=', Carbon::parse($date)->endOfDay()))
-            ->when($filters['mission_order_id'] ?? null, fn (Builder $query, $id) => $query->where('mission_order_id', (int) $id))
-            ->when($filters['employee_id'] ?? null, fn (Builder $query, $id) => $query->where('employee_id', (int) $id))
-            ->when($filters['control_run_id'] ?? null, fn (Builder $query, $id) => $query->where('control_run_id', (int) $id))
-            ->when($filters['search'] ?? null, function (Builder $query, string $search) {
-                $like = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], trim($search)).'%';
-                $query->where(fn (Builder $query) => $query
-                    ->whereHas('missionOrder', fn (Builder $order) => $order->where('reference', 'ilike', $like))
-                    ->orWhereHas('employee', fn (Builder $employee) => $employee->search($search))
-                    ->orWhere('description', 'ilike', $like));
-            })
-            ->orderByDesc('detected_at')
-            ->orderByDesc('id')
             ->paginate(25)
             ->withQueryString();
 

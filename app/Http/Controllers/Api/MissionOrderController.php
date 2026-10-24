@@ -3,9 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Actions\SaveMissionOrder;
-use App\Enums\AdministrativeStatus;
-use App\Enums\ControlStatus;
-use App\Enums\MissionOrderType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveMissionOrderRequest;
 use App\Http\Resources\MissionOrderResource;
@@ -13,40 +10,23 @@ use App\Http\Resources\MissionOrderSummaryResource;
 use App\Models\Employee;
 use App\Models\MissionOrder;
 use App\Models\User;
+use App\Search\MissionOrderSearch;
 use App\Support\Audit;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Validation\Rule;
 
 class MissionOrderController extends Controller
 {
+    /**
+     * Recherche multicritère (§ 14.1).
+     */
     public function index(Request $request): AnonymousResourceCollection
     {
-        $filters = $request->validate([
-            'search' => ['nullable', 'string', 'max:255'],
-            'type' => ['nullable', Rule::enum(MissionOrderType::class)],
-            'administrative_status' => ['nullable', Rule::enum(AdministrativeStatus::class)],
-            'control_status' => ['nullable', Rule::enum(ControlStatus::class)],
-            'employee_id' => ['nullable', 'integer'],
-        ]);
-
-        $orders = MissionOrder::query()
+        $orders = MissionOrderSearch::query(MissionOrderSearch::validate($request))
             ->with(MissionOrderSummaryResource::RELATIONS)
             ->withCount('openAnomalies')
-            ->when($filters['search'] ?? null, function (Builder $query, string $search) {
-                $like = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], trim($search)).'%';
-                $query->where(fn (Builder $query) => $query
-                    ->where('reference', 'ilike', $like)
-                    ->orWhereHas('employees.employee', fn (Builder $employee) => $employee->search($search)));
-            })
-            ->when($filters['type'] ?? null, fn (Builder $query, string $type) => $query->where('type', $type))
-            ->when($filters['administrative_status'] ?? null, fn (Builder $query, string $status) => $query->where('administrative_status', $status))
-            ->when($filters['control_status'] ?? null, fn (Builder $query, string $status) => $query->where('control_status', $status))
-            ->when($filters['employee_id'] ?? null, fn (Builder $query, $id) => $query->concerning((int) $id))
-            ->orderByRaw('departure_at desc nulls last')
-            ->orderByDesc('id')
+            ->latestDeparture()
             ->paginate(25)
             ->withQueryString();
 
@@ -93,8 +73,7 @@ class MissionOrderController extends Controller
             ->with(MissionOrderSummaryResource::RELATIONS)
             ->withCount('openAnomalies')
             ->concerning($employee->id)
-            ->orderByRaw('departure_at desc nulls last')
-            ->orderByDesc('id')
+            ->latestDeparture()
             ->get();
 
         return MissionOrderSummaryResource::collection($orders);
