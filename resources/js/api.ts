@@ -26,7 +26,9 @@ export function errorsFrom(error: unknown): { errors: ValidationErrors; message:
         }
 
         if (error.response.status === 429) {
-            return { errors: {}, message: 'Trop de tentatives. Réessayez dans une minute.' };
+            // Le serveur indique en secondes quand réessayer.
+            const minutes = Math.max(1, Math.ceil(Number(error.response.headers['retry-after'] ?? 60) / 60));
+            return { errors: {}, message: `Trop de tentatives. Réessayez dans ${minutes > 1 ? `${minutes} minutes` : 'une minute'}.` };
         }
     }
 

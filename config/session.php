@@ -169,7 +169,8 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // Par défaut, le cookie suit le https forcé de l'application (config/app.php).
+    'secure' => (bool) env('SESSION_SECURE_COOKIE', env('APP_FORCE_HTTPS', env('APP_ENV') === 'production')),
 
     /*
     |--------------------------------------------------------------------------

@@ -53,6 +53,9 @@ jobs:
       - name: Static analysis (Larastan)
         run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
 
+      - name: PostgreSQL client (backups)
+        run: pg_dump --version
+
       - name: Tests (Pest)
         run: vendor/bin/pest
         env:

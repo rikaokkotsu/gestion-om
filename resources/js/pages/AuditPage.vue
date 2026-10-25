@@ -29,6 +29,10 @@ const actionLabels: Record<string, string> = {
     'export.anomalies': 'Export Excel des anomalies',
     'report.mission_order': 'Rapport de contrôle d\'un OM',
     'report.summary': 'Récapitulatif des OM',
+    'backup.created': 'Sauvegarde de la base',
+    'backup.failed': 'Échec de la sauvegarde',
+    'backup.verified': 'Sauvegarde vérifiée par restauration',
+    'backup.verification_failed': 'Échec de la vérification d\'une sauvegarde',
 };
 
 const subjectLabels: Record<string, string> = {
@@ -70,6 +74,7 @@ const filters = [
     { value: 'export.', label: 'Exports' },
     { value: 'report.', label: 'Rapports' },
     { value: 'rate', label: 'Barèmes' },
+    { value: 'backup.', label: 'Sauvegardes' },
 ];
 
 const logs = ref<AuditLog[]>([]);
@@ -138,6 +143,12 @@ const fieldLabels: Record<string, string> = {
     criteria: 'critères',
     orders: 'OM',
     anomalies: 'anomalies',
+    file: 'fichier',
+    size: 'taille',
+    tables: 'tables',
+    rows: 'lignes',
+    deleted: 'anciennes sauvegardes supprimées',
+    error: 'erreur',
 };
 
 // Valeurs codées (états, priorités…) affichées par leur libellé.
@@ -164,6 +175,9 @@ const referenceFields: Record<string, () => { id: number; name?: string; label?:
 };
 
 function formatField(key: string, value: unknown): string {
+    if (key === 'size' && typeof value === 'number') {
+        return `${Math.ceil(value / 1024).toLocaleString('fr-FR')} Ko`;
+    }
     const options = optionFields[key];
     if (options && typeof value === 'string') {
         return options().find((option) => option.value === value)?.label ?? value;
@@ -257,7 +271,7 @@ onMounted(async () => {
                     </tr>
                     <tr v-for="log in logs" v-else :key="log.id">
                         <td class="px-4 py-2 whitespace-nowrap">{{ new Date(log.created_at).toLocaleString('fr-FR') }}</td>
-                        <td class="px-4 py-2">{{ log.user?.name ?? '—' }}</td>
+                        <td class="px-4 py-2">{{ log.user?.name ?? (log.action.startsWith('backup.') ? 'Tâche planifiée' : '—') }}</td>
                         <td class="px-4 py-2">{{ actionLabel(log.action) }}</td>
                         <td class="px-4 py-2 text-slate-600">{{ subject(log) }}</td>
                         <td class="px-4 py-2 text-slate-600">{{ details(log) }}</td>
