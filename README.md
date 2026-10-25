@@ -7,13 +7,14 @@ Pile technique : Laravel 13 (PHP 8.3), Vue 3 + TypeScript, Tailwind CSS 4, Postg
 ## Documentation
 
 - [Documentation technique](docs/technique.md) : architecture, modules, modèle de données, sécurité.
+- [Installer Gestion OM sur son ordinateur, sans Docker](docs/installation-locale.md) : guide pas à pas, sans connaissance technique.
 - [Installation et exploitation](docs/exploitation.md) : serveur de production, https, mises à jour, sauvegardes et restauration, surveillance.
 - [Guide d'utilisation](docs/guide-utilisation.md) : pour les contrôleurs.
 - [Rapport de tests et de validation](docs/rapport-de-tests.md) : résultats des tests et recette.
 
 ## Démarrer en local
 
-Prérequis : PHP 8.3 avec `pdo_pgsql`, Composer, Node 22, Docker (ou un PostgreSQL 16 local).
+Prérequis : PHP 8.3 avec `pdo_pgsql`, Composer, Node 22, Docker (ou un PostgreSQL 16 local : voir [docs/installation-locale.md](docs/installation-locale.md), qui détaille aussi l'installation pas à pas sous Windows).
 
 ```sh
 docker compose up -d          # PostgreSQL avec les bases gestion_om et gestion_om_test
