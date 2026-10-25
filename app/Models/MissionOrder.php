@@ -207,6 +207,16 @@ class MissionOrder extends Model implements DescribedInAudit
     }
 
     /**
+     * Ordre des listes : départ le plus récent d'abord, OM sans date de départ à la fin.
+     *
+     * @param  Builder<MissionOrder>  $query
+     */
+    public function scopeLatestDeparture(Builder $query): void
+    {
+        $query->orderByRaw('departure_at desc nulls last')->orderByDesc('id');
+    }
+
+    /**
      * Modifié depuis le dernier contrôle : les anomalies affichées peuvent ne plus refléter l'OM.
      */
     public function changedSinceControl(): bool

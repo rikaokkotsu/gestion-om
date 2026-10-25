@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\MissionOrderController;
 use App\Http\Controllers\Api\PerDiemController;
 use App\Http\Controllers\Api\RateVersionController;
 use App\Http\Controllers\Api\ReferentialController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -55,6 +56,12 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('/control-runs', [ControlController::class, 'runs']);
     Route::post('/control-runs', [ControlController::class, 'storeRun']);
     Route::get('/control-runs/{controlRun}', [ControlController::class, 'showRun']);
+
+    Route::get('/dashboard', [ReportController::class, 'dashboard']);
+    Route::get('/reports/summary', [ReportController::class, 'summary']);
+    Route::get('/reports/mission-orders/{missionOrder}', [ReportController::class, 'missionOrder']);
+    Route::get('/exports/mission-orders', [ReportController::class, 'exportMissionOrders']);
+    Route::get('/exports/anomalies', [ReportController::class, 'exportAnomalies']);
 
     Route::get('/imports/{type}/template', [ImportController::class, 'template']);
     Route::post('/imports/{type}', [ImportController::class, 'store']);

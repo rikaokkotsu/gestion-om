@@ -382,3 +382,43 @@ export interface ControlRun {
     finished_at: string | null;
     created_at: string | null;
 }
+
+export interface Breakdown {
+    value: string | null;
+    label: string;
+    count: number;
+}
+
+export interface DashboardFigures {
+    orders: {
+        total: number;
+        by_type: Breakdown[];
+        by_administrative_status: Breakdown[];
+        by_control_status: Breakdown[];
+        with_anomalies: number;
+        with_open_anomalies: number;
+    };
+    anomalies: {
+        total: number;
+        open: number;
+        by_category: { value: AnomalyCategoryCode; label: string; count: number; open: number }[];
+    };
+    per_diem: {
+        missionaries: number;
+        complete: number;
+        incomplete: number;
+        not_calculated: number;
+        calculated: number;
+        declared_count: number;
+        declared: number;
+        compared: number;
+        mismatches: number;
+        gap: number;
+    };
+    costs: {
+        orders_with_costs: number;
+        additional_costs: number;
+        orders_with_allowance: number;
+        assignment_allowance: number;
+    };
+}

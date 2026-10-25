@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { http } from '@/api';
 import { priorityClasses, stateClasses } from '@/anomalies';
 import ControlBatchPanel from '@/components/ControlBatchPanel.vue';
+import DownloadButton from '@/components/DownloadButton.vue';
 import ControlRulesPanel from '@/components/ControlRulesPanel.vue';
 import { employeeName, formatTimestamp } from '@/format';
 import { useReferentials } from '@/referentials';
@@ -52,8 +53,12 @@ const scoped = computed(() =>
     ].filter(Boolean),
 );
 
+function criteria(): Record<string, string> {
+    return Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== ''));
+}
+
 function params(): Record<string, string> {
-    return Object.fromEntries(Object.entries({ ...filters, page: String(page.value) }).filter(([, value]) => value !== ''));
+    return { ...criteria(), page: String(page.value) };
 }
 
 async function load(): Promise<void> {
@@ -163,7 +168,10 @@ onMounted(async () => {
             </p>
             <p v-if="invalid" class="text-sm text-red-700">{{ invalid }}</p>
 
-            <p class="text-sm text-slate-600">{{ total }} anomalie{{ total > 1 ? 's' : '' }}, de la plus récente à la plus ancienne</p>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="text-sm text-slate-600">{{ total }} anomalie{{ total > 1 ? 's' : '' }}, de la plus récente à la plus ancienne</p>
+                <DownloadButton url="/api/exports/anomalies" label="Exporter en Excel" :params="criteria" />
+            </div>
             <div class="card overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-200 text-sm">
                     <thead class="bg-slate-50 text-left text-slate-600">
