@@ -4,6 +4,13 @@ Application de contrôle des Ordres de Mission (OM). Les contrôleurs saisissent
 
 Pile technique : Laravel 13 (PHP 8.3), Vue 3 + TypeScript, Tailwind CSS 4, PostgreSQL 16, tests Pest, analyse statique Larastan.
 
+## Documentation
+
+- [Documentation technique](docs/technique.md) : architecture, modules, modèle de données, sécurité.
+- [Installation et exploitation](docs/exploitation.md) : serveur de production, https, mises à jour, sauvegardes et restauration, surveillance.
+- [Guide d'utilisation](docs/guide-utilisation.md) : pour les contrôleurs.
+- [Rapport de tests et de validation](docs/rapport-de-tests.md) : résultats des tests et recette.
+
 ## Démarrer en local
 
 Prérequis : PHP 8.3 avec `pdo_pgsql`, Composer, Node 22, Docker (ou un PostgreSQL 16 local).
@@ -33,7 +40,18 @@ npm run typecheck                                        # types TypeScript
 npm run build                                            # build du front
 ```
 
-L'intégration continue (`.github/workflows/ci.yml`) lance les mêmes commandes sur chaque pull request.
+L'intégration continue (`.github/workflows/ci.yml`) lance les mêmes commandes sur chaque pull request. Le workflow `dependencies.yml` cherche chaque lundi les failles connues des dépendances (`composer audit`, `npm audit`).
+
+## Mise en production
+
+La procédure complète est dans [docs/exploitation.md](docs/exploitation.md). En résumé :
+
+- Partir de [`.env.production.example`](.env.production.example) : `APP_ENV=production` et `APP_DEBUG=false`, adresse en https. En production, les URL sont forcées en https et le cookie de session n'est envoyé qu'en https ; derrière un proxy qui termine le https, renseigner `TRUSTED_PROXIES`.
+- Chaque réponse porte les en-têtes de sécurité (`App\Http\Middleware\SecurityHeaders`) : politique de contenu stricte, interdiction de l'affichage dans un cadre, HSTS sur les requêtes https.
+- Limites (`AppServiceProvider::configureRateLimiting()`) : connexion à 5 essais par minute pour un compte depuis une adresse, 20 par minute par adresse, 30 par heure par compte ; API à 600 requêtes par minute ; exports et PDF à 20 par minute.
+- Faire tourner la file d'attente (`php artisan queue:work`) et le planificateur (`php artisan schedule:run` chaque minute).
+- `php artisan om:sauvegarde` (chaque jour à 02:00) sauvegarde la base avec `pg_dump` et un manifeste (empreinte SHA-256, nombre de lignes de chaque table sur le même instantané), puis supprime les sauvegardes de plus de `BACKUP_KEEP_DAYS` jours. `php artisan om:verifier-sauvegarde` (02:30) restaure la dernière sauvegarde dans une base temporaire et compare chaque table ; le rôle PostgreSQL a besoin du droit `CREATEDB`.
+- `php artisan om:verifier-installation` vérifie la configuration, la base et les sauvegardes, sans rien modifier.
 
 ## Comptes et droits
 
@@ -94,10 +112,11 @@ Page « Import » : lieux d'abord, puis employés. Fichiers `.xlsx` ou `.csv` (v
 - Exports Excel : le classeur des OM (feuilles OM, Missionnaires, Frais, Transports, Anomalies, Critères) et la liste des anomalies, avec les filtres de l'écran. Montants déclarés et calculés y figurent côte à côte ; un texte qui commence par « = » reste un texte.
 - PDF : le rapport de contrôle d'un OM (fiche, per diem déclaré et calculé avec le détail du calcul, frais, transports, anomalies par état avec leur dernier commentaire) et le récapitulatif d'une sélection d'OM (indicateurs puis liste, limitée à 500 OM ; l'export Excel n'a pas de limite). Les PDF sont produits par dompdf, sans ressource distante.
 - Chaque export et chaque rapport est inscrit au journal d'audit avec ses critères et le nombre de lignes produites.
+- Sauvegardes et vérifications de sauvegarde sont aussi au journal (`backup.created`, `backup.verified`, et leurs échecs), avec l'auteur « Tâche planifiée ».
 
 ## Organisation de l'API
 
-- `POST /auth/login`, `POST /auth/logout` : session Sanctum (cookie + jeton XSRF), 5 tentatives par minute.
+- `POST /auth/login`, `POST /auth/logout` : session Sanctum (cookie + jeton XSRF), tentatives limitées (voir « Mise en production »).
 - `GET /api/me`, `PUT /api/me/password`
 - `GET|POST /api/users`, `PATCH /api/users/{id}`, `POST /api/users/{id}/deactivate`, `POST /api/users/{id}/reactivate`
 - `GET /api/referentials` (toutes les listes), `GET|POST /api/referentials/{type}`, `PATCH /api/referentials/{type}/{id}` avec `type` = `categories`, `places`, `services`, `mission-objects`, `transport-modes`

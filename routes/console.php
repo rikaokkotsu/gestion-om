@@ -1,8 +1,7 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+// Sauvegarde quotidienne de la base, puis restauration d'essai de cette sauvegarde (docs/exploitation.md).
+Schedule::command('om:sauvegarde')->dailyAt(config('backup.schedule.backup'))->withoutOverlapping();
+Schedule::command('om:verifier-sauvegarde')->dailyAt(config('backup.schedule.verify'))->withoutOverlapping();

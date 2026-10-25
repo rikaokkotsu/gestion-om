@@ -56,6 +56,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | HTTPS et proxy
+    |--------------------------------------------------------------------------
+    |
+    | En production, les URL produites par l'application sont en https. Quand
+    | le chiffrement est assuré par un proxy (Nginx sur une autre machine,
+    | répartiteur de charge), ses adresses sont listées dans TRUSTED_PROXIES
+    | (séparées par des virgules, ou * derrière un proxy unique de confiance)
+    | pour que l'application reconnaisse les requêtes https qu'il relaie.
+    |
+    */
+
+    'force_https' => (bool) env('APP_FORCE_HTTPS', env('APP_ENV') === 'production'),
+
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
