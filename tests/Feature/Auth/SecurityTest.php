@@ -36,7 +36,8 @@ it('limite les essais sur un compte depuis plusieurs adresses, pendant une heure
 });
 
 it('envoie les en-têtes de sécurité', function () {
-    $response = $this->get('/connexion')->assertOk();
+    // L'intégration continue ne compile pas l'interface : la page se rend sans les fichiers de Vite.
+    $response = $this->withoutVite()->get('/connexion')->assertOk();
 
     $response->assertHeader('X-Content-Type-Options', 'nosniff')
         ->assertHeader('X-Frame-Options', 'DENY')
@@ -58,7 +59,8 @@ it('répond sans erreur serveur à une visite de l\'API sans session', function 
 });
 
 it('impose le https au navigateur une fois la connexion chiffrée', function () {
-    $this->get('https://localhost/connexion')
+    $this->withoutVite()->get('https://localhost/connexion')
+        ->assertOk()
         ->assertHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 });
 

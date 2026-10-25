@@ -6,7 +6,7 @@ Ce rapport présente les tests de Gestion OM, leurs résultats à la livraison d
 
 | Vérification | Résultat |
 |---|---|
-| Tests automatisés (Pest, sur PostgreSQL 16) | **170 tests, 1 011 vérifications, tous réussis** (35 s) |
+| Tests automatisés (Pest, sur PostgreSQL 16) | **170 tests, 1 012 vérifications, tous réussis** (35 s) |
 | Analyse statique PHP (Larastan, niveau 6) | aucune erreur |
 | Style PHP (Pint) | conforme |
 | Types TypeScript (`vue-tsc`) | aucune erreur |
@@ -30,7 +30,7 @@ Environnement : PHP 8.3.6, Laravel 13.38, PostgreSQL 16.15, Node 22.22, Pest 4.7
 
 | Domaine | Fichiers de test | Tests | Vérifications |
 |---|---|---|---|
-| Comptes, connexion et sécurité (§ 3, 15.1, 17.3) | `Auth/LoginTest`, `Auth/SecurityTest`, `MeTest`, `Users/ManageUsersTest`, `Users/DeactivateUserTest`, `CreateFirstAccountCommandTest` | 30 | 173 |
+| Comptes, connexion et sécurité (§ 3, 15.1, 17.3) | `Auth/LoginTest`, `Auth/SecurityTest`, `MeTest`, `Users/ManageUsersTest`, `Users/DeactivateUserTest`, `CreateFirstAccountCommandTest` | 30 | 174 |
 | Traçabilité (§ 15.3) | `AuditLogTest` (et une vérification du journal dans la plupart des autres tests) | 2 | 8 |
 | Employés, affectations, lieux, référentiels, import (§ 4, 6, 7) | `Employees/EmployeeTest`, `Referentials/ReferentialTest`, `Imports/ImportTest` | 26 | 134 |
 | Barèmes et per diem (§ 9, 10) | `PerDiem/PerDiemCalculatorTest`, `PerDiem/RateVersionTest` | 20 | 100 |
@@ -38,7 +38,7 @@ Environnement : PHP 8.3.6, Laravel 13.38, PostgreSQL 16.15, Node 22.22, Pest 4.7
 | Contrôle et anomalies (§ 13) | `Control/RulesTest`, `Control/ControlEngineTest`, `Control/AnomalyApiTest` | 49 | 206 |
 | Recherche, tableau de bord, rapports (§ 14) | `Reports/MissionOrderSearchTest`, `Reports/DashboardTest`, `Reports/ExportTest`, `Reports/ReportTest` | 18 | 227 |
 | Sauvegarde et exploitation (§ 15.7) | `Operations/BackupTest`, `Operations/InstallationCheckTest` | 8 | 54 |
-| **Total** | 23 fichiers | **170** | **1 011** |
+| **Total** | 23 fichiers | **170** | **1 012** |
 
 ## 4. Exigences de qualité du § 17.5
 
