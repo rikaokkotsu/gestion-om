@@ -58,6 +58,14 @@ php -m | findstr pgsql
 
 Vous devez voir deux lignes : `pdo_pgsql` et `pgsql`.
 
+> **Si `php -v` affiche `PHP 8.2` ou un numéro plus petit**, ou si un message mentionne `C:\xampp` ou `C:\wamp` : un ancien PHP, souvent celui de **XAMPP** ou de **WAMP**, passe avant celui de Herd. Gestion OM ne fonctionne pas avec lui. Sans rien désinstaller, retirez-le de la liste des dossiers où Windows cherche les programmes (le « Path ») :
+>
+> 1. Menu Démarrer, tapez `variables d'environnement` et ouvrez **Modifier les variables d'environnement système**.
+> 2. Cliquez sur **Variables d'environnement…**.
+> 3. Dans la liste du haut, cliquez sur la ligne **Path**, puis **Modifier…**. Si une ligne comme `C:\xampp\php` (ou un dossier `php` sous `C:\wamp64`) y figure, sélectionnez-la, cliquez sur **Supprimer**, puis **OK**.
+> 4. Faites de même pour la ligne **Path** de la liste du bas.
+> 5. Validez par **OK** jusqu'à fermer toutes les fenêtres, fermez **toutes** les fenêtres de commandes, puis rouvrez-en une et refaites la vérification.
+>
 > **Si `php` « n'est pas reconnu en tant que commande interne »** : fermez la fenêtre de commandes et rouvrez-la. Si le message persiste, redémarrez l'ordinateur.
 >
 > **Si la dernière commande n'affiche rien** : tapez `php --ini` ; la ligne « Loaded Configuration File » donne l'emplacement du fichier `php.ini`. Ouvrez ce fichier avec le Bloc-notes, cherchez `;extension=pdo_pgsql` et effacez le point-virgule du début ; faites de même pour `;extension=pgsql`. Enregistrez, fermez la fenêtre de commandes, rouvrez-la et refaites la vérification.
@@ -143,6 +151,8 @@ Dans la fenêtre ouverte à l'étape 6, lancez les commandes suivantes **une par
    ```
    composer install
    ```
+
+   Un dossier `vendor` doit être apparu dans le dossier du projet. **S'il n'y est pas, ne continuez pas** : relisez les dernières lignes de la fenêtre et cherchez-les dans [En cas de problème](#en-cas-de-problème).
 
 2. Télécharger les composants de l'interface (quelques minutes) :
 
@@ -247,6 +257,8 @@ Quand une nouvelle version de Gestion OM est disponible :
 |---|---|---|
 | `'php' n'est pas reconnu en tant que commande interne` (ou `composer`, `node`, `npm`) | La fenêtre a été ouverte avant l'installation | Fermez la fenêtre de commandes et rouvrez-la ; si cela ne suffit pas, redémarrez l'ordinateur. |
 | `l'exécution de scripts est désactivée sur ce système` | La fenêtre est PowerShell, pas l'Invite de commandes | Ouvrez la fenêtre comme indiqué à l'étape 6 (taper `cmd` dans la barre d'adresse). |
+| `your php version (8.2…) does not satisfy that requirement` pendant `composer install` | La fenêtre utilise un PHP trop ancien, souvent celui de XAMPP ou WAMP | Suivez l'encadré « Si `php -v` affiche `PHP 8.2` » de l'étape 1, puis relancez `composer install`. |
+| `vendor/autoload.php` … `Failed to open stream` | `composer install` n'a pas été lancé ou n'a pas abouti | Relancez `composer install` et lisez les dernières lignes : la cause y est indiquée (souvent un PHP trop ancien, voir la ligne précédente). |
 | `could not find driver` | PHP ne sait pas parler à PostgreSQL | Refaites la vérification de l'étape 1 et activez `pdo_pgsql` et `pgsql`. |
 | `password authentication failed for user "gestion_om"` | Le compte de base de données n'existe pas ou a un autre mot de passe | Refaites l'étape 4. |
 | `database "gestion_om" does not exist` | La base n'a pas été créée | Refaites l'étape 4 (seulement la commande `CREATE DATABASE`). |
